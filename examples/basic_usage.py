@@ -3,7 +3,7 @@
 Basic usage example for Kiwoom API Python client.
 
 This example demonstrates how to:
-1. Initialize the client
+1. Token management and client initialization
 2. Get stock quote data
 3. Retrieve ETF information
 4. Handle errors properly
@@ -16,21 +16,44 @@ from kiwoom_api import KiwoomClient, KiwoomAPIError, KiwoomAuthError
 def main():
     """Main example function."""
     
-    # Get API token from environment variable
-    # You should set this in your environment: export KIWOOM_ACCESS_TOKEN="your_token"
+    # Method 1: Use existing access token
     access_token = os.getenv("KIWOOM_ACCESS_TOKEN")
     
-    if not access_token:
-        print("Please set KIWOOM_ACCESS_TOKEN environment variable")
-        return
+    # Method 2: Use app credentials to auto-generate token
+    appkey = os.getenv("KIWOOM_APP_KEY")
+    secretkey = os.getenv("KIWOOM_SECRET_KEY")
     
-    # Initialize the client (using sandbox by default)
-    client = KiwoomClient(
-        access_token=access_token,
-        is_production=False,  # Use sandbox for testing
-        timeout=30,
-        retry_attempts=3
-    )
+    client = None
+    
+    if access_token:
+        print("🔑 Using existing access token...")
+        # Initialize the client with existing token
+        client = KiwoomClient(
+            access_token=access_token,
+            is_production=False,  # Use sandbox for testing
+            timeout=30,
+            retry_attempts=3
+        )
+    elif appkey and secretkey:
+        print("🔑 Using app credentials to generate token...")
+        # Create client with automatic token generation
+        try:
+            client = KiwoomClient.create_with_credentials(
+                appkey=appkey,
+                secretkey=secretkey,
+                is_production=False,
+                timeout=30,
+                retry_attempts=3
+            )
+            print("✅ Token generated successfully!")
+        except Exception as e:
+            print(f"❌ Failed to generate token: {e}")
+            return
+    else:
+        print("❌ Please set either:")
+        print("   - KIWOOM_ACCESS_TOKEN environment variable, OR")
+        print("   - Both KIWOOM_APP_KEY and KIWOOM_SECRET_KEY environment variables")
+        return
     
     try:
         print("🚀 Kiwoom API Client Example")
@@ -79,6 +102,15 @@ def main():
             print(f"Error getting historical data: {e}")
             
         print("\n✅ Example completed successfully!")
+        
+        # Optional: Revoke token if we generated it
+        if appkey and secretkey and not access_token:
+            try:
+                print("\n🔒 Revoking generated token for security...")
+                client.revoke_current_token(appkey, secretkey)
+                print("✅ Token revoked successfully!")
+            except Exception as e:
+                print(f"⚠️ Warning: Failed to revoke token: {e}")
         
     except KiwoomAuthError:
         print("❌ Authentication failed. Please check your access token.")

@@ -5,7 +5,14 @@ Unit tests for KiwoomClient.
 import pytest
 import responses
 from unittest.mock import Mock, patch
-from kiwoom_api import KiwoomClient, KiwoomAPIError, KiwoomAuthError, KiwoomRequestError
+from kiwoom_api import (
+    KiwoomClient, 
+    KiwoomAPIError, 
+    KiwoomAuthError, 
+    KiwoomRequestError,
+    TokenResponse,
+    TokenRevokeResponse
+)
 
 
 class TestKiwoomClient:
@@ -229,4 +236,147 @@ class TestErrorHandling:
         )
         
         with pytest.raises(KiwoomAPIError):  # Should be converted to generic error after retries
-            self.client._make_request("/api/dostk/mrkcond", "ka10004") 
+            self.client._make_request("/api/dostk/mrkcond", "ka10004")
+
+
+class TestTokenManagement:
+    """Test cases for token management functionality."""
+    
+    @responses.activate
+    def test_issue_token_success(self):
+        """Test successful token issuance."""
+        responses.add(
+            responses.POST,
+            f"{KiwoomClient.SANDBOX_URL}/oauth2/token",
+            json={
+                "return_code": 0,
+                "return_msg": "정상적으로 처리되었습니다",
+                "expires_dt": "20241107083713",
+                "token_type": "bearer",
+                "token": "WQJCwyqInphKnR3bSRtB9NE1lv..."
+            },
+            status=200
+        )
+        
+        token_response = KiwoomClient.issue_token(
+            appkey="test_app_key",
+            secretkey="test_secret_key",
+            is_production=False
+        )
+        
+        assert isinstance(token_response, TokenResponse)
+        assert token_response.token_type == "bearer"
+        assert token_response.expires_dt == "20241107083713"
+        assert token_response.token == "WQJCwyqInphKnR3bSRtB9NE1lv..."
+    
+    @responses.activate
+    def test_issue_token_failure(self):
+        """Test token issuance failure."""
+        responses.add(
+            responses.POST,
+            f"{KiwoomClient.SANDBOX_URL}/oauth2/token",
+            json={
+                "return_code": 1001,
+                "return_msg": "Invalid credentials"
+            },
+            status=200
+        )
+        
+        with pytest.raises(KiwoomAuthError) as exc_info:
+            KiwoomClient.issue_token(
+                appkey="invalid_key",
+                secretkey="invalid_secret",
+                is_production=False
+            )
+        
+        assert "Invalid credentials" in str(exc_info.value)
+    
+    @responses.activate
+    def test_revoke_token_success(self):
+        """Test successful token revocation."""
+        responses.add(
+            responses.POST,
+            f"{KiwoomClient.SANDBOX_URL}/oauth2/revoke",
+            json={
+                "return_code": 0,
+                "return_msg": "정상적으로 처리되었습니다"
+            },
+            status=200
+        )
+        
+        revoke_response = KiwoomClient.revoke_token(
+            appkey="test_app_key",
+            secretkey="test_secret_key",
+            token="test_token",
+            is_production=False
+        )
+        
+        assert isinstance(revoke_response, TokenRevokeResponse)
+        assert revoke_response.return_code == 0
+        assert revoke_response.return_msg == "정상적으로 처리되었습니다"
+    
+    @responses.activate
+    def test_create_with_credentials(self):
+        """Test client creation with credentials."""
+        responses.add(
+            responses.POST,
+            f"{KiwoomClient.SANDBOX_URL}/oauth2/token",
+            json={
+                "return_code": 0,
+                "return_msg": "정상적으로 처리되었습니다",
+                "expires_dt": "20241107083713",
+                "token_type": "bearer", 
+                "token": "auto_generated_token"
+            },
+            status=200
+        )
+        
+        client = KiwoomClient.create_with_credentials(
+            appkey="test_app_key",
+            secretkey="test_secret_key",
+            is_production=False
+        )
+        
+        assert client.access_token == "auto_generated_token"
+        assert client.base_url == KiwoomClient.SANDBOX_URL
+    
+    @responses.activate
+    def test_revoke_current_token(self):
+        """Test revoking current token."""
+        client = KiwoomClient(
+            access_token="current_token",
+            is_production=False
+        )
+        
+        responses.add(
+            responses.POST,
+            f"{KiwoomClient.SANDBOX_URL}/oauth2/revoke", 
+            json={
+                "return_code": 0,
+                "return_msg": "정상적으로 처리되었습니다"
+            },
+            status=200
+        )
+        
+        revoke_response = client.revoke_current_token(
+            appkey="test_app_key",
+            secretkey="test_secret_key"
+        )
+        
+        assert revoke_response.return_code == 0
+    
+    @responses.activate
+    def test_token_http_error(self):
+        """Test token operations with HTTP errors."""
+        responses.add(
+            responses.POST,
+            f"{KiwoomClient.SANDBOX_URL}/oauth2/token",
+            status=401
+        )
+        
+        with pytest.raises(KiwoomAuthError):
+            KiwoomClient.issue_token(
+                appkey="test_key", 
+                secretkey="test_secret",
+                is_production=False
+            ) 

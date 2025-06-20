@@ -104,4 +104,33 @@ class Position(BaseModel):
     current_price: Optional[str] = Field(None, description="현재가")
     evaluation_amount: Optional[str] = Field(None, description="평가금액")
     profit_loss: Optional[str] = Field(None, description="평가손익")
-    profit_loss_rate: Optional[str] = Field(None, description="수익률") 
+    profit_loss_rate: Optional[str] = Field(None, description="수익률")
+
+
+class TokenRequest(BaseModel):
+    """Request model for token issuance (au10001)."""
+    
+    grant_type: str = Field("client_credentials", description="grant_type")
+    appkey: str = Field(..., description="앱키")
+    secretkey: str = Field(..., description="시크릿키")
+
+
+class TokenResponse(BaseKiwoomResponse):
+    """Response model for token issuance (au10001)."""
+    
+    expires_dt: str = Field(..., description="만료일")
+    token_type: str = Field(..., description="토큰타입")
+    token: str = Field(..., description="접근토큰")
+
+
+class TokenRevokeRequest(BaseModel):
+    """Request model for token revocation (au10002)."""
+    
+    appkey: str = Field(..., description="앱키")
+    secretkey: str = Field(..., description="시크릿키")
+    token: str = Field(..., description="접근토큰")
+
+
+class TokenRevokeResponse(BaseKiwoomResponse):
+    """Response model for token revocation (au10002)."""
+    pass  # Only contains base response fields 

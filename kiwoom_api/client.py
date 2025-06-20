@@ -21,7 +21,11 @@ from .models import (
     ETFData,
     ELWData,
     AccountBalance,
-    Position
+    Position,
+    TokenRequest,
+    TokenResponse,
+    TokenRevokeRequest,
+    TokenRevokeResponse
 )
 
 
@@ -70,6 +74,146 @@ class KiwoomClient:
             "Authorization": f"Bearer {access_token}",
             "Content-Type": "application/json;charset=UTF-8"
         })
+    
+    @classmethod
+    def create_with_credentials(
+        cls,
+        appkey: str,
+        secretkey: str,
+        is_production: bool = False,
+        **kwargs
+    ) -> 'KiwoomClient':
+        """
+        Create a client instance by automatically obtaining an access token.
+        
+        Args:
+            appkey: App key from Kiwoom Securities
+            secretkey: Secret key from Kiwoom Securities  
+            is_production: Whether to use production or sandbox environment
+            **kwargs: Additional arguments for KiwoomClient constructor
+            
+        Returns:
+            Configured KiwoomClient instance
+        """
+        token_response = cls.issue_token(appkey, secretkey, is_production)
+        return cls(
+            access_token=token_response.token,
+            is_production=is_production,
+            **kwargs
+        )
+    
+    @staticmethod
+    def issue_token(appkey: str, secretkey: str, is_production: bool = False) -> TokenResponse:
+        """
+        Issue a new access token using app credentials (au10001).
+        
+        Args:
+            appkey: App key from Kiwoom Securities
+            secretkey: Secret key from Kiwoom Securities
+            is_production: Whether to use production or sandbox environment
+            
+        Returns:
+            TokenResponse with access token and expiration info
+        """
+        base_url = KiwoomClient.PRODUCTION_URL if is_production else KiwoomClient.SANDBOX_URL
+        url = urljoin(base_url, "/oauth2/token")
+        
+        token_request = TokenRequest(
+            grant_type="client_credentials",
+            appkey=appkey,
+            secretkey=secretkey
+        )
+        
+        headers = {
+            "Content-Type": "application/json;charset=UTF-8"
+        }
+        
+        response = requests.post(
+            url,
+            json=token_request.dict(),
+            headers=headers,
+            timeout=30
+        )
+        
+        if response.status_code != 200:
+            raise KiwoomAuthError(f"Token issuance failed: {response.status_code}")
+        
+        try:
+            response_data = response.json()
+        except ValueError as e:
+            raise KiwoomAPIError(f"Invalid JSON response: {e}")
+        
+        if response_data.get("return_code") != 0:
+            error_msg = response_data.get("return_msg", "Unknown error")
+            raise KiwoomAuthError(f"Token issuance failed: {error_msg}")
+        
+        return TokenResponse(**response_data)
+    
+    @staticmethod  
+    def revoke_token(appkey: str, secretkey: str, token: str, is_production: bool = False) -> TokenRevokeResponse:
+        """
+        Revoke an access token (au10002).
+        
+        Args:
+            appkey: App key from Kiwoom Securities
+            secretkey: Secret key from Kiwoom Securities  
+            token: Access token to revoke
+            is_production: Whether to use production or sandbox environment
+            
+        Returns:
+            TokenRevokeResponse confirming revocation
+        """
+        base_url = KiwoomClient.PRODUCTION_URL if is_production else KiwoomClient.SANDBOX_URL
+        url = urljoin(base_url, "/oauth2/revoke")
+        
+        revoke_request = TokenRevokeRequest(
+            appkey=appkey,
+            secretkey=secretkey,
+            token=token
+        )
+        
+        headers = {
+            "Content-Type": "application/json;charset=UTF-8"
+        }
+        
+        response = requests.post(
+            url,
+            json=revoke_request.dict(),
+            headers=headers,
+            timeout=30
+        )
+        
+        if response.status_code != 200:
+            raise KiwoomAuthError(f"Token revocation failed: {response.status_code}")
+        
+        try:
+            response_data = response.json()
+        except ValueError as e:
+            raise KiwoomAPIError(f"Invalid JSON response: {e}")
+        
+        if response_data.get("return_code") != 0:
+            error_msg = response_data.get("return_msg", "Unknown error")
+            raise KiwoomAuthError(f"Token revocation failed: {error_msg}")
+        
+        return TokenRevokeResponse(**response_data)
+    
+    def revoke_current_token(self, appkey: str, secretkey: str) -> TokenRevokeResponse:
+        """
+        Revoke the current access token being used by this client.
+        
+        Args:
+            appkey: App key from Kiwoom Securities
+            secretkey: Secret key from Kiwoom Securities
+            
+        Returns:
+            TokenRevokeResponse confirming revocation
+        """
+        return self.revoke_token(
+            appkey=appkey,
+            secretkey=secretkey,
+            token=self.access_token,
+            is_production=(self.base_url == self.PRODUCTION_URL)
+        )
     
     def _make_request(
         self,

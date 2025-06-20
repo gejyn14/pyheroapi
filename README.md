@@ -32,17 +32,68 @@ pip install kiwoom-api[dev]
 
 ## Quick Start
 
-### Basic Usage
+### Authentication & Token Management
+
+The Kiwoom API uses OAuth2 authentication. You can authenticate in two ways:
+
+#### Method 1: Using App Credentials (Recommended)
 
 ```python
 from kiwoom_api import KiwoomClient
 
-# Initialize the client
-client = KiwoomClient(
-    access_token="your_access_token",
+# Create client with automatic token generation
+client = KiwoomClient.create_with_credentials(
+    appkey="your_app_key",
+    secretkey="your_secret_key",
     is_production=False  # Use sandbox for testing
 )
 
+# The client automatically handles token issuance
+print("✅ Client ready with auto-generated token")
+```
+
+#### Method 2: Manual Token Management
+
+```python
+from kiwoom_api import KiwoomClient
+
+# Issue token manually
+token_response = KiwoomClient.issue_token(
+    appkey="your_app_key",
+    secretkey="your_secret_key",
+    is_production=False
+)
+
+# Create client with issued token
+client = KiwoomClient(
+    access_token=token_response.token,
+    is_production=False
+)
+
+# Revoke token when done (optional)
+KiwoomClient.revoke_token(
+    appkey="your_app_key",
+    secretkey="your_secret_key", 
+    token=token_response.token,
+    is_production=False
+)
+```
+
+#### Method 3: Using Pre-issued Token
+
+```python
+from kiwoom_api import KiwoomClient
+
+# Initialize with existing token
+client = KiwoomClient(
+    access_token="your_existing_token",
+    is_production=False
+)
+```
+
+### Basic Usage
+
+```python
 # Get stock quote data
 quote = client.get_quote("005930")  # Samsung Electronics
 print(f"Best bid: {quote.buy_fpr_bid}")
@@ -57,6 +108,9 @@ print(f"NAV: {etf_info.nav}")
 elw_info = client.get_elw_info("57JBHH")
 print(f"Strike Price: {elw_info.strike_price}")
 print(f"Expiry Date: {elw_info.expiry_date}")
+
+# Clean up (if using auto-generated token)
+client.revoke_current_token("your_app_key", "your_secret_key")
 ```
 
 ### Advanced Usage
@@ -107,6 +161,46 @@ except KiwoomAPIError as e:
 ### KiwoomClient
 
 The main client class for interacting with the Kiwoom API.
+
+#### Authentication Methods
+
+##### create_with_credentials(appkey: str, secretkey: str, is_production: bool = False, **kwargs) → KiwoomClient
+
+Create a client instance by automatically obtaining an access token.
+
+```python
+client = KiwoomClient.create_with_credentials(
+    appkey="your_app_key",
+    secretkey="your_secret_key",
+    is_production=False
+)
+```
+
+##### issue_token(appkey: str, secretkey: str, is_production: bool = False) → TokenResponse
+
+Issue a new access token using app credentials (au10001).
+
+```python
+token_response = KiwoomClient.issue_token("app_key", "secret_key", False)
+print(f"Token: {token_response.token}")
+print(f"Expires: {token_response.expires_dt}")
+```
+
+##### revoke_token(appkey: str, secretkey: str, token: str, is_production: bool = False) → TokenRevokeResponse
+
+Revoke an access token (au10002).
+
+```python
+KiwoomClient.revoke_token("app_key", "secret_key", "token", False)
+```
+
+##### revoke_current_token(appkey: str, secretkey: str) → TokenRevokeResponse
+
+Revoke the current access token being used by this client.
+
+```python
+client.revoke_current_token("app_key", "secret_key")
+```
 
 #### Constructor
 
