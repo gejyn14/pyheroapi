@@ -22,7 +22,7 @@ from .models import (
     TokenRevokeResponse,
 )
 
-__version__ = "0.2.1"
+__version__ = "0.2.3"
 __author__ = "Kiwoom API Client"
 __email__ = "contact@example.com"
 
