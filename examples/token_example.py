@@ -11,7 +11,7 @@ Based on the Kiwoom API documentation for OAuth authentication.
 """
 
 import os
-from kiwoom_api import KiwoomClient, TokenRequest, TokenResponse, TokenRevokeRequest
+from pyheroapi import KiwoomClient, TokenRequest, TokenResponse, TokenRevokeRequest
 
 def token_management_example():
     """Demonstrate token issuance and revocation."""

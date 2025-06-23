@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Build and publish script for kiwoom-api package.
+Build and publish script for pyheroapi package.
 
 This script helps with:
 1. Building the package
@@ -59,7 +59,7 @@ def run_tests():
     run_command("pip install -e .[dev]")
     
     # Run tests
-    run_command("pytest tests/ -v --cov=kiwoom_api")
+    run_command("pytest tests/ -v --cov=pyheroapi")
     
     print("✅ All tests passed")
 
@@ -69,13 +69,13 @@ def lint_code():
     print("🔍 Running code quality checks...")
     
     # Format with black
-    run_command("black kiwoom_api/ tests/ examples/")
+    run_command("black pyheroapi/ tests/ examples/")
     
     # Sort imports
-    run_command("isort kiwoom_api/ tests/ examples/")
+    run_command("isort pyheroapi/ tests/ examples/")
     
     # Type checking
-    run_command("mypy kiwoom_api/", check=False)  # Don't fail on mypy errors
+    run_command("mypy pyheroapi/", check=False)  # Don't fail on mypy errors
     
     print("✅ Code quality checks completed")
 
@@ -109,7 +109,7 @@ def publish_to_test_pypi():
     run_command("twine upload --repository testpypi dist/*")
     
     print("✅ Published to Test PyPI")
-    print("You can install with: pip install --index-url https://test.pypi.org/simple/ kiwoom-api")
+    print("You can install with: pip install --index-url https://test.pypi.org/simple/ pyheroapi")
 
 
 def publish_to_pypi():
@@ -135,7 +135,7 @@ def publish_to_pypi():
     run_command("twine upload dist/*")
     
     print("✅ Published to PyPI")
-    print("You can install with: pip install kiwoom-api")
+    print("You can install with: pip install pyheroapi")
 
 
 def main():

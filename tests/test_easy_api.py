@@ -39,7 +39,7 @@ class TestEasyAPI:
         )
     
     @patch('pyheroapi.easy_api.KiwoomClient.create_with_credentials')
-    def test_kiwoom_api_connect(self, mock_create):
+    def test_pyheroapi_connect(self, mock_create):
         """Test KiwoomAPI.connect class method."""
         mock_client = Mock()
         mock_create.return_value = mock_client

@@ -171,7 +171,7 @@ def comparison_with_old_api():
     print("""
 OLD WAY (complex):
 ------------------
-from kiwoom_api import KiwoomClient, KiwoomAPIError, KiwoomAuthError
+from pyheroapi import KiwoomClient, KiwoomAPIError, KiwoomAuthError
 
 # Complex authentication
 try:
@@ -209,10 +209,10 @@ except Exception as e:
 
 NEW WAY (simple):
 -----------------
-import kiwoom_api
+import pyheroapi
 
 # One line connection
-with kiwoom_api.connect("your_key", "your_secret") as api:
+with pyheroapi.connect("your_key", "your_secret") as api:
     # Simple property access with automatic error handling
     price = api.stock("005930").current_price
     print(f"Price: ₩{price:,}" if price else "Price: N/A")

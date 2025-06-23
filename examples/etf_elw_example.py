@@ -10,7 +10,7 @@ This example demonstrates advanced features for:
 
 import os
 from typing import List, Dict, Any
-from kiwoom_api import KiwoomClient, KiwoomAPIError
+from pyheroapi import KiwoomClient, KiwoomAPIError
 
 
 def analyze_etf(client: KiwoomClient, symbol: str, name: str):

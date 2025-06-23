@@ -1,6 +1,6 @@
-# Publishing Guide for Kiwoom API Python Client
+# Publishing Guide for PyHero API Python Client
 
-This guide will help you publish the `kiwoom-api` package to PyPI.
+This guide will help you publish the `pyheroapi` package to PyPI.
 
 ## Prerequisites
 
@@ -61,17 +61,17 @@ python scripts/build_and_publish.py pypi
 
 ```bash
 # Format code
-black kiwoom_api/ tests/ examples/
-isort kiwoom_api/ tests/ examples/
+black pyheroapi/ tests/ examples/
+isort pyheroapi/ tests/ examples/
 
 # Type checking
-mypy kiwoom_api/
+mypy pyheroapi/
 ```
 
 #### Step 2: Run Tests
 
 ```bash
-pytest tests/ -v --cov=kiwoom_api
+pytest tests/ -v --cov=pyheroapi
 ```
 
 #### Step 3: Build Package
@@ -101,10 +101,10 @@ python -m venv test_env
 source test_env/bin/activate  # On Windows: test_env\Scripts\activate
 
 # Install from Test PyPI
-pip install --index-url https://test.pypi.org/simple/ kiwoom-api
+pip install --index-url https://test.pypi.org/simple/ pyheroapi
 
 # Test the installation
-python -c "from kiwoom_api import KiwoomClient; print('✅ Import successful')"
+python -c "from pyheroapi import KiwoomClient; print('✅ Import successful')"
 ```
 
 #### Step 6: Publish to Production PyPI
