@@ -46,10 +46,10 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourusername/kiwoom-api"
-Documentation = "https://github.com/yourusername/kiwoom-api#readme"
-Repository = "https://github.com/yourusername/kiwoom-api.git"
-Issues = "https://github.com/yourusername/kiwoom-api/issues"
+Homepage = "https://github.com/gejyn14/pyheroapi"
+Documentation = "https://github.com/gejyn14/pyheroapi#readme"
+Repository = "https://github.com/gejyn14/pyheroapi.git"
+Issues = "https://github.com/gejyn14/pyheroapi/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["pyheroapi"]
