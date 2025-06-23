@@ -321,7 +321,7 @@ api = pyheroapi.connect("key", "secret", sandbox=False)
 ```
 
 ### API 키 발급
-1. [키움증권 개발자센터](https://apiportal.kiwoom.com/) 방문
+1. [키움 REST API](https://openapi.kiwoom.com/) 방문
 2. 계정 생성 및 로그인
 3. 새 애플리케이션 등록
 4. APP KEY와 SECRET KEY 발급

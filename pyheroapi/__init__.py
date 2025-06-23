@@ -2,7 +2,7 @@
 Kiwoom API Python Client
 
 A Python client library for interacting with Kiwoom Securities REST API.
-Provides easy-to-use interfaces for market data, trading, and account management.
+Provides easy-to-use interfaces for market data, trading, account management, and real-time data streaming.
 """
 
 from .client import KiwoomClient
@@ -21,6 +21,24 @@ from .models import (
     TokenRevokeRequest,
     TokenRevokeResponse,
 )
+
+# Real-time functionality (optional import)
+try:
+    from .realtime import (
+        KiwoomRealtimeClient,
+        RealtimeData,
+        RealtimeDataType,
+        RealtimeSubscription,
+        RealtimeContext,
+        create_realtime_client,
+    )
+    _REALTIME_AVAILABLE = True
+except ImportError:
+    _REALTIME_AVAILABLE = False
+    # Provide stub classes for documentation
+    class KiwoomRealtimeClient:
+        def __init__(self, *args, **kwargs):
+            raise ImportError("Real-time functionality requires 'websockets' package. Install with: pip install websockets")
 
 __version__ = "0.2.3"
 __author__ = "Kiwoom API Client"
@@ -53,3 +71,14 @@ __all__ = [
     "TokenRevokeRequest",
     "TokenRevokeResponse",
 ]
+
+# Add real-time exports if available
+if _REALTIME_AVAILABLE:
+    __all__.extend([
+        "KiwoomRealtimeClient",
+        "RealtimeData",
+        "RealtimeDataType",
+        "RealtimeSubscription",
+        "RealtimeContext",
+        "create_realtime_client",
+    ])

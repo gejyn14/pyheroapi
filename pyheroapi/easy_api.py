@@ -12,6 +12,13 @@ from typing import Any, Dict, List, Optional, Union
 
 from .client import KiwoomClient
 from .exceptions import KiwoomAPIError, KiwoomAuthError
+
+# Optional real-time functionality
+try:
+    from .realtime import KiwoomRealtimeClient, create_realtime_client
+    _REALTIME_AVAILABLE = True
+except ImportError:
+    _REALTIME_AVAILABLE = False
 from .models import AccountBalance, ELWData, ETFData, Position, QuoteData
 
 # Set up logging
@@ -653,6 +660,7 @@ class KiwoomAPI:
     def __init__(self, client: KiwoomClient):
         self._client = client
         self.trading = Trading(client)
+        self._realtime_client = None
 
     @classmethod
     def connect(
@@ -831,6 +839,65 @@ class KiwoomAPI:
             logger.error(f"Failed to get market status: {e}")
             return {"error": str(e), "timestamp": datetime.now().isoformat()}
 
+    def create_realtime_client(self, **kwargs) -> "KiwoomRealtimeClient":
+        """
+        Create a real-time WebSocket client for market data streaming.
+        
+        Args:
+            **kwargs: Additional arguments for KiwoomRealtimeClient
+        
+        Returns:
+            KiwoomRealtimeClient instance
+            
+        Raises:
+            ImportError: If websockets library is not installed
+        """
+        if not _REALTIME_AVAILABLE:
+            raise ImportError(
+                "Real-time functionality requires 'websockets' package. "
+                "Install with: pip install pyheroapi[realtime]"
+            )
+        
+        if self._realtime_client is None:
+            self._realtime_client = create_realtime_client(
+                access_token=self._client.access_token,
+                is_production=self._client.base_url == self._client.PRODUCTION_URL,
+                **kwargs
+            )
+        
+        return self._realtime_client
+    
+    @property
+    def realtime(self) -> "KiwoomRealtimeClient":
+        """
+        Access real-time market data client.
+        
+        Returns:
+            KiwoomRealtimeClient instance (creates if not exists)
+            
+        Example:
+            ```python
+            import asyncio
+            
+            async def price_callback(data):
+                print(f"Price update: {data.symbol} = {data.values.get('10')}")
+            
+            # Create API connection
+            api = pyheroapi.connect("app_key", "secret_key")
+            
+            # Get real-time client
+            rt_client = api.realtime
+            
+            # Add callback and subscribe
+            rt_client.add_callback("0B", price_callback)
+            await rt_client.connect()
+            await rt_client.subscribe_stock_price("005930")
+            ```
+        """
+        if self._realtime_client is None:
+            self._realtime_client = self.create_realtime_client()
+        return self._realtime_client
+
     def disconnect(self):
         """
         Clean up resources and disconnect from the API.
@@ -839,6 +906,15 @@ class KiwoomAPI:
         or you can use the context manager form to automatically clean up.
         """
         try:
+            # Disconnect real-time client if exists
+            if self._realtime_client:
+                import asyncio
+                if asyncio.get_event_loop().is_running():
+                    # If in async context, schedule disconnect
+                    asyncio.create_task(self._realtime_client.disconnect())
+                else:
+                    # If not in async context, run disconnect
+                    asyncio.run(self._realtime_client.disconnect())
             # Could add token revocation here if needed
             logger.info("🔌 Disconnected from Kiwoom API")
         except Exception as e:
