@@ -2,14 +2,16 @@
 Data models for Kiwoom API responses using Pydantic for validation.
 """
 
-from typing import List, Optional, Dict, Any, Union
-from pydantic import BaseModel, Field
 from datetime import datetime
 from enum import Enum
+from typing import Any, Dict, List, Optional, Union
+
+from pydantic import BaseModel, Field
 
 
 class OrderType(str, Enum):
     """Order type enumeration"""
+
     NORMAL = "0"  # 보통
     MARKET = "3"  # 시장가
     CONDITIONAL_LIMIT = "5"  # 조건부지정가
@@ -32,41 +34,62 @@ class OrderType(str, Enum):
 
 class MarketType(str, Enum):
     """Market type enumeration"""
+
     KRX = "KRX"
-    NASDAQ = "NXT" 
+    NASDAQ = "NXT"
     SOR = "SOR"
 
 
 class BaseKiwoomResponse(BaseModel):
     """Base response model for all Kiwoom API responses."""
+
     return_code: int
     return_msg: str
 
 
 class QuoteData(BaseModel):
     """Stock quote/order book data."""
-    
+
     # Order book data
     bid_req_base_tm: Optional[str] = Field(None, description="호가잔량기준시간")
-    
-    # Sell orders (매도호가)
-    sell_orders: List[Dict[str, str]] = Field(default_factory=list)
-    
-    # Buy orders (매수호가) 
-    buy_orders: List[Dict[str, str]] = Field(default_factory=list)
-    
+
+    # Best prices (most important for current price info)
+    buy_fpr_bid: Optional[str] = Field(None, description="매수최우선호가")
+    buy_fpr_req: Optional[str] = Field(None, description="매수최우선잔량")
+    sel_fpr_bid: Optional[str] = Field(None, description="매도최우선호가")
+    sel_fpr_req: Optional[str] = Field(None, description="매도최우선잔량")
+
     # Total quantities
     tot_sel_req: Optional[str] = Field(None, description="총매도잔량")
     tot_buy_req: Optional[str] = Field(None, description="총매수잔량")
-    
+
     # After hours data
     ovt_sel_req: Optional[str] = Field(None, description="시간외매도잔량")
     ovt_buy_req: Optional[str] = Field(None, description="시간외매수잔량")
 
+    # Additional order book levels (2-10)
+    buy_2th_pre_bid: Optional[str] = Field(None, description="매수2차선호가")
+    buy_2th_pre_req: Optional[str] = Field(None, description="매수2차선잔량")
+    buy_3th_pre_bid: Optional[str] = Field(None, description="매수3차선호가")
+    buy_3th_pre_req: Optional[str] = Field(None, description="매수3차선잔량")
+    buy_4th_pre_bid: Optional[str] = Field(None, description="매수4차선호가")
+    buy_4th_pre_req: Optional[str] = Field(None, description="매수4차선잔량")
+    buy_5th_pre_bid: Optional[str] = Field(None, description="매수5차선호가")
+    buy_5th_pre_req: Optional[str] = Field(None, description="매수5차선잔량")
+
+    sel_2th_pre_bid: Optional[str] = Field(None, description="매도2차선호가")
+    sel_2th_pre_req: Optional[str] = Field(None, description="매도2차선잔량")
+    sel_3th_pre_bid: Optional[str] = Field(None, description="매도3차선호가")
+    sel_3th_pre_req: Optional[str] = Field(None, description="매도3차선잔량")
+    sel_4th_pre_bid: Optional[str] = Field(None, description="매도4차선호가")
+    sel_4th_pre_req: Optional[str] = Field(None, description="매도4차선잔량")
+    sel_5th_pre_bid: Optional[str] = Field(None, description="매도5차선호가")
+    sel_5th_pre_req: Optional[str] = Field(None, description="매도5차선잔량")
+
 
 class MarketData(BaseModel):
     """Basic market data for a stock."""
-    
+
     symbol: str = Field(..., description="종목코드")
     name: Optional[str] = Field(None, description="종목명")
     current_price: Optional[str] = Field(None, description="현재가")
@@ -79,7 +102,7 @@ class MarketData(BaseModel):
 
 class OrderData(BaseModel):
     """Order execution data."""
-    
+
     symbol: str = Field(..., description="종목코드")
     order_time: Optional[str] = Field(None, description="주문시간")
     execution_time: Optional[str] = Field(None, description="체결시간")
@@ -90,7 +113,7 @@ class OrderData(BaseModel):
 
 class ETFData(BaseModel):
     """ETF specific data."""
-    
+
     symbol: str = Field(..., description="종목코드")
     name: Optional[str] = Field(None, description="종목명")
     nav: Optional[str] = Field(None, description="NAV")
@@ -100,7 +123,7 @@ class ETFData(BaseModel):
 
 class ELWData(BaseModel):
     """ELW (Equity Linked Warrant) specific data."""
-    
+
     symbol: str = Field(..., description="종목코드")
     name: Optional[str] = Field(None, description="종목명")
     underlying_asset: Optional[str] = Field(None, description="기초자산")
@@ -115,7 +138,7 @@ class ELWData(BaseModel):
 
 class AccountBalance(BaseModel):
     """Account balance information."""
-    
+
     account_number: str = Field(..., description="계좌번호")
     total_balance: Optional[str] = Field(None, description="총잔고")
     available_balance: Optional[str] = Field(None, description="주문가능금액")
@@ -125,9 +148,9 @@ class AccountBalance(BaseModel):
 
 class Position(BaseModel):
     """Stock position information."""
-    
+
     symbol: str = Field(..., description="종목코드")
-    name: Optional[str] = Field(None, description="종목명") 
+    name: Optional[str] = Field(None, description="종목명")
     quantity: Optional[str] = Field(None, description="보유수량")
     available_quantity: Optional[str] = Field(None, description="매도가능수량")
     average_price: Optional[str] = Field(None, description="평균단가")
@@ -165,6 +188,7 @@ class TokenRevokeResponse(BaseModel):
 # Trading Models
 class OrderRequest(BaseModel):
     """Base order request model"""
+
     dmst_stex_tp: str = Field(..., description="국내거래소구분 (KRX,NXT,SOR)")
     stk_cd: str = Field(..., description="종목코드")
     ord_qty: str = Field(..., description="주문수량")
@@ -175,6 +199,7 @@ class OrderRequest(BaseModel):
 
 class OrderResponse(BaseModel):
     """Order response model"""
+
     ord_no: Optional[str] = Field(None, description="주문번호")
     dmst_stex_tp: Optional[str] = Field(None, description="국내거래소구분")
     return_code: int = 0
@@ -183,6 +208,7 @@ class OrderResponse(BaseModel):
 
 class ModifyOrderRequest(BaseModel):
     """Order modification request model"""
+
     dmst_stex_tp: str = Field(..., description="국내거래소구분")
     orig_ord_no: str = Field(..., description="원주문번호")
     stk_cd: str = Field(..., description="종목코드")
@@ -193,6 +219,7 @@ class ModifyOrderRequest(BaseModel):
 
 class ModifyOrderResponse(BaseModel):
     """Order modification response model"""
+
     ord_no: Optional[str] = Field(None, description="주문번호")
     base_orig_ord_no: Optional[str] = Field(None, description="모주문번호")
     mdfy_qty: Optional[str] = Field(None, description="정정수량")
@@ -203,6 +230,7 @@ class ModifyOrderResponse(BaseModel):
 
 class CancelOrderRequest(BaseModel):
     """Order cancellation request model"""
+
     dmst_stex_tp: str = Field(..., description="국내거래소구분")
     orig_ord_no: str = Field(..., description="원주문번호")
     stk_cd: str = Field(..., description="종목코드")
@@ -211,6 +239,7 @@ class CancelOrderRequest(BaseModel):
 
 class CancelOrderResponse(BaseModel):
     """Order cancellation response model"""
+
     ord_no: Optional[str] = Field(None, description="주문번호")
     base_orig_ord_no: Optional[str] = Field(None, description="모주문번호")
     cncl_qty: Optional[str] = Field(None, description="취소수량")
@@ -222,6 +251,7 @@ class CancelOrderResponse(BaseModel):
 # Enhanced Market Data Models
 class IntradayPrice(BaseModel):
     """Intraday price data model"""
+
     date: Optional[str] = None
     time: Optional[str] = None
     open_pric: Optional[str] = None
@@ -237,6 +267,7 @@ class IntradayPrice(BaseModel):
 
 class MarketPerformance(BaseModel):
     """Market performance indicators model"""
+
     stk_nm: Optional[str] = None
     stk_cd: Optional[str] = None
     date: Optional[str] = None
@@ -266,6 +297,7 @@ class MarketPerformance(BaseModel):
 # Account Models
 class RealizedProfitLoss(BaseModel):
     """Realized profit/loss model"""
+
     stk_nm: Optional[str] = None
     cntr_qty: Optional[str] = None
     buy_uv: Optional[str] = None
@@ -282,6 +314,7 @@ class RealizedProfitLoss(BaseModel):
 
 class UnfilledOrder(BaseModel):
     """Unfilled order model"""
+
     ord_no: Optional[str] = None
     stk_cd: Optional[str] = None
     stk_nm: Optional[str] = None
@@ -296,6 +329,7 @@ class UnfilledOrder(BaseModel):
 
 class FilledOrder(BaseModel):
     """Filled order model"""
+
     ord_no: Optional[str] = None
     stk_cd: Optional[str] = None
     stk_nm: Optional[str] = None
@@ -309,6 +343,7 @@ class FilledOrder(BaseModel):
 
 class TradingJournal(BaseModel):
     """Daily trading journal model"""
+
     stk_cd: Optional[str] = None
     stk_nm: Optional[str] = None
     buy_qty: Optional[str] = None
@@ -322,6 +357,7 @@ class TradingJournal(BaseModel):
 
 class DepositDetail(BaseModel):
     """Deposit detail model"""
+
     tot_evla_amt: Optional[str] = None
     scts_evla_amt: Optional[str] = None
     tot_dncl_amt: Optional[str] = None
@@ -332,8 +368,9 @@ class DepositDetail(BaseModel):
 
 class AssetEvaluation(BaseModel):
     """Asset evaluation model"""
+
     evla_amt: Optional[str] = None
     bfdy_evla_amt: Optional[str] = None
     evla_pfls_amt: Optional[str] = None
     evla_pfls_rt: Optional[str] = None
-    scts_evla_amt: Optional[str] = None 
+    scts_evla_amt: Optional[str] = None

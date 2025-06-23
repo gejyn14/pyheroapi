@@ -10,21 +10,22 @@ This example demonstrates how to:
 """
 
 import os
-from pyheroapi import KiwoomClient, KiwoomAPIError, KiwoomAuthError
+
+from pyheroapi import KiwoomAPIError, KiwoomAuthError, KiwoomClient
 
 
 def main():
     """Main example function."""
-    
+
     # Method 1: Use existing access token
     access_token = os.getenv("KIWOOM_ACCESS_TOKEN")
-    
+
     # Method 2: Use app credentials to auto-generate token
     appkey = os.getenv("KIWOOM_APP_KEY")
     secretkey = os.getenv("KIWOOM_SECRET_KEY")
-    
+
     client = None
-    
+
     if access_token:
         print("🔑 Using existing access token...")
         # Initialize the client with existing token
@@ -32,7 +33,7 @@ def main():
             access_token=access_token,
             is_production=False,  # Use sandbox for testing
             timeout=30,
-            retry_attempts=3
+            retry_attempts=3,
         )
     elif appkey and secretkey:
         print("🔑 Using app credentials to generate token...")
@@ -43,7 +44,7 @@ def main():
                 secretkey=secretkey,
                 is_production=False,
                 timeout=30,
-                retry_attempts=3
+                retry_attempts=3,
             )
             print("✅ Token generated successfully!")
         except Exception as e:
@@ -54,11 +55,11 @@ def main():
         print("   - KIWOOM_ACCESS_TOKEN environment variable, OR")
         print("   - Both KIWOOM_APP_KEY and KIWOOM_SECRET_KEY environment variables")
         return
-    
+
     try:
         print("🚀 Kiwoom API Client Example")
         print("=" * 40)
-        
+
         # Example 1: Get stock quote data
         print("\n📊 Getting stock quote for Samsung Electronics (005930)...")
         try:
@@ -69,7 +70,7 @@ def main():
             print(f"Total Buy Quantity: {quote.tot_buy_req}")
         except Exception as e:
             print(f"Error getting quote: {e}")
-        
+
         # Example 2: Get ETF information
         print("\n💹 Getting ETF info for KODEX 200 (069500)...")
         try:
@@ -79,7 +80,7 @@ def main():
             print(f"Tracking Error: {etf.tracking_error}")
         except Exception as e:
             print(f"Error getting ETF info: {e}")
-        
+
         # Example 3: Get ELW information
         print("\n⚡ Getting ELW info for sample ELW (57JBHH)...")
         try:
@@ -90,7 +91,7 @@ def main():
             print(f"Delta: {elw.delta}")
         except Exception as e:
             print(f"Error getting ELW info: {e}")
-        
+
         # Example 4: Get historical data
         print("\n📈 Getting historical data...")
         try:
@@ -100,9 +101,9 @@ def main():
                 print(f"  Date: {price_data.get('date', 'N/A')}")
         except Exception as e:
             print(f"Error getting historical data: {e}")
-            
+
         print("\n✅ Example completed successfully!")
-        
+
         # Optional: Revoke token if we generated it
         if appkey and secretkey and not access_token:
             try:
@@ -111,7 +112,7 @@ def main():
                 print("✅ Token revoked successfully!")
             except Exception as e:
                 print(f"⚠️ Warning: Failed to revoke token: {e}")
-        
+
     except KiwoomAuthError:
         print("❌ Authentication failed. Please check your access token.")
     except KiwoomAPIError as e:
@@ -123,4 +124,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main() 
+    main()

@@ -222,3 +222,6 @@ docs/_build/
 
 # PyPI upload configuration (should use keyring instead)
 .pypirc
+
+# Samsung stock test files (temporary testing scripts)
+samsung_stock_tests/
