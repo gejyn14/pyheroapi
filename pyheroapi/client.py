@@ -130,7 +130,7 @@ class KiwoomClient:
         
         response = requests.post(
             url,
-            json=token_request.dict(),
+            json=token_request.model_dump(),
             headers=headers,
             timeout=30
         )
@@ -178,7 +178,7 @@ class KiwoomClient:
         
         response = requests.post(
             url,
-            json=revoke_request.dict(),
+            json=revoke_request.model_dump(),
             headers=headers,
             timeout=30
         )

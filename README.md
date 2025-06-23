@@ -8,13 +8,26 @@ A Python client library for interacting with the Kiwoom Securities REST API. Thi
 
 ## Features
 
-- 🚀 **Easy to use**: Simple and intuitive API interface
-- 📊 **Market Data**: Real-time quotes, historical data, and market information
+### 🌟 User Experience
+- 🚀 **Super Easy API**: One-line connection, intuitive syntax, automatic cleanup
+- 🔄 **Context Manager**: Automatic token management and resource cleanup
+- ⚡ **Smart Caching**: Built-in caching reduces redundant API calls
+- 🛡️ **Graceful Error Handling**: Errors return safe defaults instead of crashing
+- 📝 **Clean Data Format**: Returns structured dictionaries instead of raw API responses
+
+### 📊 Market Data
+- 📈 **Real-time Quotes**: Current prices, bid/ask spreads, order book data
+- 📉 **Historical Data**: Daily prices, volume, and technical indicators  
 - 💹 **ETF & ELW Support**: Specialized support for ETFs and ELWs (Equity Linked Warrants)
-- 🔒 **Error Handling**: Comprehensive error handling and retry mechanisms
+- 🔍 **Stock Search**: Find stocks by name or symbol
+- 📊 **Market Status**: Check if markets are open/closed
+
+### 🛠️ Developer Experience  
+- 🔒 **Automatic Authentication**: No manual token management required
 - 📝 **Type Safety**: Full type hints for better development experience
-- ⚡ **Async Support**: Built-in rate limiting and request optimization
+- ⚡ **Built-in Retries**: Automatic retry on network failures
 - 🛡️ **Production Ready**: Supports both sandbox and production environments
+- 📚 **Rich Documentation**: Comprehensive examples and API reference
 
 ## Installation
 
@@ -32,9 +45,59 @@ pip install kiwoom-api[dev]
 
 ## Quick Start
 
-### Authentication & Token Management
+### ⚡ Super Easy API (Recommended)
 
-The Kiwoom API uses OAuth2 authentication. You can authenticate in two ways:
+For most users, use the simplified API that handles all complexity automatically:
+
+```python
+import kiwoom_api
+
+# One-line connection with automatic token management
+with kiwoom_api.connect("your_app_key", "your_secret_key", sandbox=True) as api:
+    
+    # Get stock price - simple property access
+    samsung = api.stock("005930")
+    price = samsung.current_price
+    print(f"Samsung price: ₩{price:,}")
+    
+    # Get ETF info - clean data format
+    kodex = api.etf("069500")
+    info = kodex.info
+    print(f"KODEX 200 NAV: ₩{info['nav']:,.2f}")
+    
+    # Get account balance
+    account = api.account("your_account_number")
+    balance = account.balance
+    print(f"Available: ₩{balance['available_balance']:,}")
+    
+    # Historical data as clean list
+    history = samsung.history(days=30)
+    for day in history[:5]:
+        print(f"{day['date']}: ₩{day['close']:,}")
+
+# Automatic cleanup - no manual token management needed!
+```
+
+### 🔥 Quick One-Liners
+
+```python
+import kiwoom_api
+
+# Connect once, use anywhere
+api = kiwoom_api.connect("app_key", "secret_key", sandbox=True)
+
+# Get data in one line
+samsung_price = api.stock("005930").current_price
+kodex_nav = api.etf("069500").info['nav']
+account_balance = api.account("123456").balance['total_balance']
+
+# Automatic error handling, caching, and retries built-in
+api.disconnect()  # Clean up when done
+```
+
+### 🛠️ Advanced API (For Power Users)
+
+If you need fine-grained control, you can still use the original client:
 
 #### Method 1: Using App Credentials (Recommended)
 
@@ -79,19 +142,7 @@ KiwoomClient.revoke_token(
 )
 ```
 
-#### Method 3: Using Pre-issued Token
-
-```python
-from kiwoom_api import KiwoomClient
-
-# Initialize with existing token
-client = KiwoomClient(
-    access_token="your_existing_token",
-    is_production=False
-)
-```
-
-### Basic Usage
+### Advanced Usage (Original Client)
 
 ```python
 # Get stock quote data

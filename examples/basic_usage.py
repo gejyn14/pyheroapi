@@ -10,7 +10,7 @@ This example demonstrates how to:
 """
 
 import os
-from kiwoom_api import KiwoomClient, KiwoomAPIError, KiwoomAuthError
+from pyheroapi import KiwoomClient, KiwoomAPIError, KiwoomAuthError
 
 
 def main():

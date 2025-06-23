@@ -5,7 +5,7 @@ Unit tests for KiwoomClient.
 import pytest
 import responses
 from unittest.mock import Mock, patch
-from kiwoom_api import (
+from pyheroapi import (
     KiwoomClient, 
     KiwoomAPIError, 
     KiwoomAuthError, 
