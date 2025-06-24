@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2024-11-25
+
+### Added
+- **Comprehensive Examples Suite**: Complete rewrite of all example files with 7 focused modules
+  - `01_authentication.py` - Token management and client setup
+  - `02_market_data.py` - Stock quotes, OHLCV data, and market performance
+  - `03_trading_orders.py` - Order management and account operations
+  - `04_etf_elw.py` - ETF and ELW analysis with Greeks and sensitivity indicators
+  - `05_rankings_analysis.py` - Market rankings and institutional trading analysis
+  - `06_charts_technical.py` - Chart data and technical analysis
+  - `07_realtime_websocket.py` - Real-time streaming with WebSocket support
+
+### Enhanced
+- **Production-Ready Code**: All examples now include proper error handling and safety measures
+- **Comprehensive Documentation**: Updated README.md with detailed usage instructions and feature coverage
+- **Safety Features**: Sandbox mode enabled by default across all examples
+- **Environment Configuration**: Improved environment variable setup and management
+- **Real-time Capabilities**: Full WebSocket implementation for live market data streaming
+
+### Changed
+- **Example Structure**: Reorganized from simple examples to comprehensive, educational modules
+- **Code Quality**: Enhanced code patterns with async/await support and proper exception handling
+- **Documentation**: Improved inline documentation and usage examples throughout
+
+### Coverage
+- **163 API Methods**: Complete coverage of all available Kiwoom Securities API endpoints
+- **All Major Features**: ETF, ELW, rankings, charts, real-time data, trading, and market analysis
+- **Educational Value**: Progressive complexity from basic authentication to advanced trading strategies
+
 ## [0.2.3] - 2024-01-15
 
 ### Fixed
