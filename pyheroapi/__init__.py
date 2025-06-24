@@ -31,6 +31,9 @@ try:
         RealtimeSubscription,
         RealtimeContext,
         create_realtime_client,
+        ConditionalSearchItem,
+        ConditionalSearchResult,
+        ConditionalSearchRealtimeData,
     )
     _REALTIME_AVAILABLE = True
 except ImportError:
@@ -81,4 +84,7 @@ if _REALTIME_AVAILABLE:
         "RealtimeSubscription",
         "RealtimeContext",
         "create_realtime_client",
+        "ConditionalSearchItem",
+        "ConditionalSearchResult",
+        "ConditionalSearchRealtimeData",
     ])

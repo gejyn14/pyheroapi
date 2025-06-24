@@ -20,6 +20,70 @@ except ImportError:
 from .exceptions import KiwoomAPIError, KiwoomAuthError
 
 
+@dataclass
+class ConditionalSearchItem:
+    """Conditional search item data."""
+    seq: str
+    name: str
+    
+    @classmethod
+    def from_response_data(cls, data: List) -> "ConditionalSearchItem":
+        """Create from response data array."""
+        return cls(seq=data[0], name=data[1])
+
+
+@dataclass 
+class ConditionalSearchResult:
+    """Conditional search result data."""
+    symbol: str
+    name: str
+    current_price: str
+    change_sign: str
+    change: str
+    change_rate: str
+    volume: str
+    open_price: str
+    high_price: str
+    low_price: str
+    
+    @classmethod
+    def from_response_data(cls, data: Dict[str, str]) -> "ConditionalSearchResult":
+        """Create from response data dictionary."""
+        return cls(
+            symbol=data.get("9001", ""),
+            name=data.get("302", ""),
+            current_price=data.get("10", ""),
+            change_sign=data.get("25", ""),
+            change=data.get("11", ""),
+            change_rate=data.get("12", ""),
+            volume=data.get("13", ""),
+            open_price=data.get("16", ""),
+            high_price=data.get("17", ""),
+            low_price=data.get("18", "")
+        )
+
+
+@dataclass
+class ConditionalSearchRealtimeData:
+    """Conditional search real-time data."""
+    seq: str
+    symbol: str
+    action: str  # I: 삽입, D: 삭제
+    time: str
+    trade_type: str
+    
+    @classmethod
+    def from_response_data(cls, data: Dict[str, str]) -> "ConditionalSearchRealtimeData":
+        """Create from response data dictionary."""
+        return cls(
+            seq=data.get("841", ""),
+            symbol=data.get("9001", ""),
+            action=data.get("843", ""),
+            time=data.get("20", ""),
+            trade_type=data.get("907", "")
+        )
+
+
 class RealtimeDataType(Enum):
     """Real-time data types (TR codes)."""
     ORDER_EXECUTION = "00"  # 주문체결
@@ -89,13 +153,14 @@ class RealtimeData:
 
 class KiwoomRealtimeClient:
     """
-    WebSocket client for Kiwoom Securities real-time market data.
+    WebSocket client for Kiwoom Securities real-time market data and conditional search.
     
     Provides asynchronous streaming of real-time market data including:
     - Stock prices and trades
     - Order book updates
     - Account balance changes
     - Order execution updates
+    - Conditional search functionality
     """
     
     PRODUCTION_WS_URL = "wss://api.kiwoom.com:10000/api/dostk/websocket"
@@ -214,7 +279,12 @@ class KiwoomRealtimeClient:
             # Real-time data update
             realtime_data_list = RealtimeData.from_response(data)
             for realtime_data in realtime_data_list:
-                await self._trigger_callbacks(realtime_data.data_type, realtime_data)
+                # Handle conditional search real-time data
+                if realtime_data.data_type == "02":  # 조건검색 real-time
+                    conditional_data = ConditionalSearchRealtimeData.from_response_data(realtime_data.values)
+                    await self._trigger_callbacks("conditional_search_realtime", conditional_data)
+                else:
+                    await self._trigger_callbacks(realtime_data.data_type, realtime_data)
                 
         elif trnm in ["REG", "REMOVE"]:
             # Subscription response
@@ -226,8 +296,20 @@ class KiwoomRealtimeClient:
             else:
                 self.logger.error(f"Subscription {trnm} failed: {return_msg}")
                 raise KiwoomAPIError(f"Subscription failed: {return_msg}")
+                
+        elif trnm == "CNSRLST":
+            # Conditional search list response
+            await self._trigger_callbacks("conditional_search_list", data)
+            
+        elif trnm == "CNSRREQ":
+            # Conditional search results response
+            await self._trigger_callbacks("conditional_search_results", data)
+            
+        elif trnm == "CNSRCLR":
+            # Conditional search clear response
+            await self._trigger_callbacks("conditional_search_clear", data)
     
-    async def _trigger_callbacks(self, data_type: str, data: RealtimeData) -> None:
+    async def _trigger_callbacks(self, data_type: str, data: Any) -> None:
         """Trigger registered callbacks for the data type."""
         callbacks = self.callbacks.get(data_type, [])
         for callback in callbacks:
@@ -372,6 +454,94 @@ class KiwoomRealtimeClient:
         
         await self._send_subscription(subscription, "REG")
         self.subscriptions[f"elw_{'-'.join(elw_symbols)}"] = subscription
+
+    # Conditional Search Methods
+    
+    async def _send_conditional_search_request(self, request: Dict[str, Any]) -> None:
+        """Send conditional search request to WebSocket."""
+        if not self.is_connected or not self.websocket:
+            raise KiwoomAPIError("WebSocket not connected")
+        
+        await self.websocket.send(json.dumps(request))
+    
+    async def get_conditional_search_list(self) -> None:
+        """
+        Get list of conditional search conditions.
+        
+        Results will be delivered to callbacks registered for 'conditional_search_list'.
+        """
+        request = {
+            "trnm": "CNSRLST"
+        }
+        await self._send_conditional_search_request(request)
+    
+    async def execute_conditional_search(
+        self, 
+        seq: str, 
+        search_type: str = "0", 
+        exchange: str = "K",
+        cont_yn: str = "N",
+        next_key: str = ""
+    ) -> None:
+        """
+        Execute conditional search.
+        
+        Args:
+            seq: Conditional search sequence number
+            search_type: Search type (0: conditional search)
+            exchange: Exchange type (K: KRX)
+            cont_yn: Continuation flag (Y: continue, N: new)
+            next_key: Continuation key for paging
+            
+        Results will be delivered to callbacks registered for 'conditional_search_results'.
+        """
+        request = {
+            "trnm": "CNSRREQ",
+            "seq": seq,
+            "search_type": search_type,
+            "stex_tp": exchange,
+            "cont_yn": cont_yn,
+            "next_key": next_key
+        }
+        await self._send_conditional_search_request(request)
+    
+    async def execute_conditional_search_realtime(
+        self, 
+        seq: str, 
+        exchange: str = "K"
+    ) -> None:
+        """
+        Execute conditional search with real-time updates.
+        
+        Args:
+            seq: Conditional search sequence number
+            exchange: Exchange type (K: KRX)
+            
+        Results will be delivered to callbacks registered for 'conditional_search_results'
+        and real-time updates to 'conditional_search_realtime'.
+        """
+        request = {
+            "trnm": "CNSRREQ",
+            "seq": seq,
+            "search_type": "1",  # 1: conditional search + real-time
+            "stex_tp": exchange
+        }
+        await self._send_conditional_search_request(request)
+    
+    async def cancel_conditional_search_realtime(self, seq: str) -> None:
+        """
+        Cancel real-time conditional search.
+        
+        Args:
+            seq: Conditional search sequence number to cancel
+            
+        Results will be delivered to callbacks registered for 'conditional_search_clear'.
+        """
+        request = {
+            "trnm": "CNSRCLR",
+            "seq": seq
+        }
+        await self._send_conditional_search_request(request)
     
     async def unsubscribe(self, subscription_key: str) -> None:
         """
