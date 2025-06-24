@@ -192,6 +192,7 @@ class KiwoomRealtimeClient:
         
         self.websocket: Optional[websockets.WebSocketServerProtocol] = None
         self.is_connected = False
+        self.keep_running = True
         self.subscriptions: Dict[str, RealtimeSubscription] = {}
         self.callbacks: Dict[str, List[Callable]] = {}
         self.reconnect_count = 0
@@ -199,32 +200,43 @@ class KiwoomRealtimeClient:
         self.logger = logging.getLogger(self.__class__.__name__)
     
     async def connect(self) -> None:
-        """Establish WebSocket connection."""
-        headers = {
-            "Authorization": f"Bearer {self.access_token}",
-            "Content-Type": "application/json;charset=UTF-8"
-        }
-        
+        """Establish WebSocket connection and perform login."""
         try:
-            self.websocket = await websockets.connect(
-                self.ws_url,
-                extra_headers=headers,
-                ping_interval=30,
-                ping_timeout=10
-            )
-            self.is_connected = True
-            self.reconnect_count = 0
-            self.logger.info("WebSocket connection established")
+            self.websocket = await websockets.connect(self.ws_url)
+            self.logger.info("WebSocket connection established, attempting login...")
             
             # Start message handling loop
             asyncio.create_task(self._message_handler())
             
+            # Send LOGIN message as required by Kiwoom API
+            login_message = {
+                'trnm': 'LOGIN',
+                'token': self.access_token
+            }
+            
+            await self.websocket.send(json.dumps(login_message))
+            self.logger.info("LOGIN message sent to WebSocket server")
+            
+            # Wait for login response
+            login_timeout = 5  # 5 second timeout for login
+            for _ in range(login_timeout * 10):  # Check every 100ms
+                if self.is_connected:
+                    break
+                await asyncio.sleep(0.1)
+            else:
+                raise KiwoomAuthError("LOGIN timeout - no response from server")
+            
+            self.reconnect_count = 0
+            self.logger.info("WebSocket connection and login successful")
+            
         except Exception as e:
+            self.is_connected = False
             self.logger.error(f"Failed to connect to WebSocket: {e}")
             raise KiwoomAuthError(f"WebSocket connection failed: {e}")
     
     async def disconnect(self) -> None:
         """Close WebSocket connection."""
+        self.keep_running = False
         self.is_connected = False
         if self.websocket:
             await self.websocket.close()
@@ -234,17 +246,27 @@ class KiwoomRealtimeClient:
     async def _message_handler(self) -> None:
         """Handle incoming WebSocket messages."""
         try:
-            async for message in self.websocket:
+            while self.keep_running and self.websocket and not self.websocket.closed:
                 try:
+                    # Receive message with timeout
+                    message = await asyncio.wait_for(
+                        self.websocket.recv(), 
+                        timeout=60  # 60 second timeout
+                    )
+                    
                     data = json.loads(message)
                     await self._process_message(data)
+                    
+                except asyncio.TimeoutError:
+                    self.logger.warning("WebSocket receive timeout - connection may be dead")
+                    break
                 except json.JSONDecodeError as e:
                     self.logger.error(f"Failed to parse message: {e}")
                 except Exception as e:
                     self.logger.error(f"Error processing message: {e}")
                     
-        except websockets.exceptions.ConnectionClosed:
-            self.logger.warning("WebSocket connection closed")
+        except websockets.exceptions.ConnectionClosed as e:
+            self.logger.warning(f"WebSocket connection closed: {e}")
             self.is_connected = False
             
             if self.auto_reconnect and self.reconnect_count < self.max_reconnect_attempts:
@@ -275,7 +297,25 @@ class KiwoomRealtimeClient:
         """Process incoming message and trigger callbacks."""
         trnm = data.get("trnm")
         
-        if trnm == "REAL":
+        if trnm == "LOGIN":
+            # Handle LOGIN response
+            return_code = data.get("return_code", 1)
+            return_msg = data.get("return_msg", "")
+            
+            if return_code == 0:
+                self.is_connected = True
+                self.logger.info("LOGIN successful")
+            else:
+                self.is_connected = False
+                self.logger.error(f"LOGIN failed: {return_msg}")
+                raise KiwoomAuthError(f"LOGIN failed: {return_msg}")
+                
+        elif trnm == "PING":
+            # Handle PING - echo back the same message (keep-alive)
+            await self.websocket.send(json.dumps(data))
+            self.logger.debug("PING response sent")
+            
+        elif trnm == "REAL":
             # Real-time data update
             realtime_data_list = RealtimeData.from_response(data)
             for realtime_data in realtime_data_list:
@@ -487,13 +527,22 @@ class KiwoomRealtimeClient:
         Execute conditional search.
         
         Args:
-            seq: Conditional search sequence number
-            search_type: Search type (0: conditional search)
-            exchange: Exchange type (K: KRX)
-            cont_yn: Continuation flag (Y: continue, N: new)
-            next_key: Continuation key for paging
+            seq: Conditional search sequence number (must exist in conditional search list)
+            search_type: Search type options:
+                        - "0": Regular conditional search (ka10172) - returns snapshot results
+                        - "1": Real-time conditional search (ka10173) - returns results + real-time updates
+            exchange: Exchange type (K: KRX, D: KOSDAQ)
+            cont_yn: Continuation flag (Y: continue, N: new search)
+            next_key: Continuation key for paging (used when cont_yn="Y")
             
         Results will be delivered to callbacks registered for 'conditional_search_results'.
+        For search_type="1", real-time updates will also be sent to 'conditional_search_realtime'.
+        
+        Note: The conditional search sequence (seq) must be previously created and exist
+              in your account. Use get_conditional_search_list() to see available sequences.
+              
+        Error responses:
+        - return_code 900004: "존재하지 않는 일련번호입니다.(seq=X)" - Sequence doesn't exist
         """
         request = {
             "trnm": "CNSRREQ",

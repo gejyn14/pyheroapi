@@ -43,7 +43,7 @@ except ImportError:
         def __init__(self, *args, **kwargs):
             raise ImportError("Real-time functionality requires 'websockets' package. Install with: pip install websockets")
 
-__version__ = "0.3.0"
+__version__ = "0.3.1"
 __author__ = "Kiwoom API Client"
 __email__ = "contact@example.com"
 

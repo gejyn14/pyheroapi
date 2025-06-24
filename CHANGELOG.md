@@ -5,6 +5,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.2] - 2024-06-09
+### Added
+- Clarified usage and distinction between ka10171 (조건검색 목록조회), ka10172 (조건검색 요청 일반), and ka10173 (조건검색 요청 실시간) in code and documentation.
+- Improved asyncio usage examples for all conditional search TRs.
+- Added new example scripts for correct ka10171, ka10172, and ka10173 usage.
+
+### Fixed
+- Documentation and code comments for accuracy regarding required request fields for each TR.
+
+## [0.3.1] - 2024-11-25
+
+### Added
+- **Comprehensive Testing Infrastructure** for real data reception validation
+- **Interactive Test Script** (`tests/test_real_data_reception.py`) with real-time feedback
+- **Integration Tests** (`tests/test_realtime_integration.py`) for actual API connections
+- **Environment Setup Guide** (`tests/ENVIRONMENT_SETUP.md`) with detailed instructions
+- **Testing Documentation** (`tests/README_TESTING.md`) with troubleshooting guide
+
+### Fixed
+- **Environment Variable Names**: Updated to correct `KIWOOM_APPKEY`/`KIWOOM_SECRETKEY` format
+- **Automatic Token Generation**: Access tokens now generated automatically from app key/secret key
+- **Test Dependencies**: Proper handling of optional websockets dependency
+
+### Changed
+- **Testing Approach**: Three-tier testing (unit, integration, interactive)
+- **Token Management**: Simplified credential setup - only app key and secret key required
+- **Error Messages**: More helpful guidance for missing dependencies and credentials
+
+### Documentation
+- **Complete Testing Guide**: How to verify real data reception
+- **Environment Setup**: Correct variable names and setup procedures
+- **Troubleshooting**: Common issues and solutions for testing
+
 ## [0.3.0] - 2024-11-25
 
 ### Added
