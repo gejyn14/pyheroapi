@@ -29,7 +29,7 @@ def setup_client():
     return KiwoomClient.create_with_credentials(
         appkey=appkey,
         secretkey=secretkey,
-        is_production=False  # IMPORTANT: Use sandbox for testing!
+        is_production=False  # SANDBOX MODE: set is_production=False explicitly
     )
 
 def account_status_example(client):

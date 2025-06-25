@@ -3,6 +3,7 @@ Main client for Kiwoom Securities REST API.
 """
 
 import time
+import os
 from typing import Any, Dict, List, Optional, Union
 from urllib.parse import urljoin
 
@@ -63,7 +64,7 @@ class KiwoomClient:
     def __init__(
         self,
         access_token: str,
-        is_production: bool = False,
+        is_production: bool = True,
         timeout: int = 30,
         retry_attempts: int = 3,
         rate_limit_delay: float = 0.1,
@@ -73,7 +74,7 @@ class KiwoomClient:
 
         Args:
             access_token: Your Kiwoom API access token
-            is_production: Whether to use production or sandbox environment
+            is_production: Whether to use production (default) or sandbox environment
             timeout: Request timeout in seconds
             retry_attempts: Number of retry attempts on failure
             rate_limit_delay: Delay between requests to avoid rate limiting
@@ -123,7 +124,7 @@ class KiwoomClient:
 
     @classmethod
     def create_with_credentials(
-        cls, appkey: str, secretkey: str, is_production: bool = False, **kwargs
+        cls, appkey: str, secretkey: str, is_production: bool = True, **kwargs
     ) -> "KiwoomClient":
         """
         Create a client instance by automatically obtaining an access token.
@@ -131,12 +132,21 @@ class KiwoomClient:
         Args:
             appkey: App key from Kiwoom Securities
             secretkey: Secret key from Kiwoom Securities
-            is_production: Whether to use production or sandbox environment
+            is_production: Whether to use production (default) or sandbox environment
             **kwargs: Additional arguments for KiwoomClient constructor
 
         Returns:
             Configured KiwoomClient instance
         """
+        # For sandbox mode, check if mock environment variables are set
+        if not is_production:
+            mock_appkey = os.getenv("KIWOOM_MOCK_APPKEY")
+            mock_secretkey = os.getenv("KIWOOM_MOCK_SECRETKEY")
+            
+            if mock_appkey and mock_secretkey:
+                appkey = mock_appkey
+                secretkey = mock_secretkey
+        
         token_response = cls.issue_token(appkey, secretkey, is_production)
         return cls(
             access_token=token_response.token, is_production=is_production, **kwargs
@@ -144,7 +154,7 @@ class KiwoomClient:
 
     @staticmethod
     def issue_token(
-        appkey: str, secretkey: str, is_production: bool = False
+        appkey: str, secretkey: str, is_production: bool = True
     ) -> TokenResponse:
         """
         Issue a new access token using app credentials (au10001).
@@ -152,11 +162,20 @@ class KiwoomClient:
         Args:
             appkey: App key from Kiwoom Securities
             secretkey: Secret key from Kiwoom Securities
-            is_production: Whether to use production or sandbox environment
+            is_production: Whether to use production (default) or sandbox environment
 
         Returns:
             TokenResponse with access token and expiration info
         """
+        # For sandbox mode, check if mock environment variables are set
+        if not is_production:
+            mock_appkey = os.getenv("KIWOOM_MOCK_APPKEY")
+            mock_secretkey = os.getenv("KIWOOM_MOCK_SECRETKEY")
+            
+            if mock_appkey and mock_secretkey:
+                appkey = mock_appkey
+                secretkey = mock_secretkey
+        
         base_url = (
             KiwoomClient.PRODUCTION_URL if is_production else KiwoomClient.SANDBOX_URL
         )
@@ -200,21 +219,30 @@ class KiwoomClient:
             is_production: Whether to use production or sandbox environment
 
         Returns:
-            TokenRevokeResponse confirming revocation
+            TokenRevokeResponse with revocation status
         """
+        # For sandbox mode, check if mock environment variables are set
+        if not is_production:
+            mock_appkey = os.getenv("KIWOOM_MOCK_APPKEY")
+            mock_secretkey = os.getenv("KIWOOM_MOCK_SECRETKEY")
+            
+            if mock_appkey and mock_secretkey:
+                appkey = mock_appkey
+                secretkey = mock_secretkey
+        
         base_url = (
             KiwoomClient.PRODUCTION_URL if is_production else KiwoomClient.SANDBOX_URL
         )
         url = urljoin(base_url, "/oauth2/revoke")
 
-        revoke_request = TokenRevokeRequest(
+        token_revoke_request = TokenRevokeRequest(
             appkey=appkey, secretkey=secretkey, token=token
         )
 
         headers = {"Content-Type": "application/json;charset=UTF-8"}
 
         response = requests.post(
-            url, json=revoke_request.model_dump(), headers=headers, timeout=30
+            url, json=token_revoke_request.model_dump(), headers=headers, timeout=30
         )
 
         if response.status_code != 200:

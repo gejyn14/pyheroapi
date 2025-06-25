@@ -35,7 +35,7 @@ class TestEasyAPI:
         mock_create.assert_called_once_with(
             appkey="test_key",
             secretkey="test_secret",
-            is_production=False,
+            is_production=False,  # SANDBOX MODE: set is_production=False explicitly
             retry_attempts=3,
             rate_limit_delay=0.1,
         )
@@ -54,7 +54,7 @@ class TestEasyAPI:
         assert hasattr(api, "_sandbox")
         assert api._app_key == "test_key"
         assert api._secret_key == "test_secret"
-        assert api._sandbox == True
+        assert api._sandbox == True  # SANDBOX MODE: set is_production=False explicitly
 
     def test_stock_creation(self):
         """Test Stock object creation."""

@@ -96,7 +96,7 @@ export KIWOOM_ACCOUNT_NUMBER="your_account_number_here"
 import pyheroapi
 
 # 1. 간단한 연결 (샌드박스 모드)
-with pyheroapi.connect() as api:
+with pyheroapi.connect(is_production=False) as api:  # SANDBOX MODE: set is_production=False explicitly
     # 2. 주식 가격 조회
     samsung = api.stock("005930")
     price = samsung.current_price
@@ -139,7 +139,7 @@ client.revoke_token()
 #### [`02_market_data.py`](examples/02_market_data.py) - 📊 시세 데이터 마스터
 ```python
 # 실시간 시세부터 과거 데이터까지
-with pyheroapi.connect() as api:
+with pyheroapi.connect(is_production=False) as api:  # SANDBOX MODE: set is_production=False explicitly
     # 실시간 시세
     samsung = api.stock("005930")
     quote = samsung.quote
@@ -161,7 +161,7 @@ with pyheroapi.connect() as api:
 #### [`03_trading_orders.py`](examples/03_trading_orders.py) - 💰 거래 실행 완전 가이드
 ```python
 # 모든 종류의 주문과 관리
-with pyheroapi.connect(is_production=False) as api:  # 샌드박스
+with pyheroapi.connect(is_production=False) as api:  # SANDBOX MODE: set is_production=False explicitly
     # 계좌 상태 확인
     account = api.account()
     balance = account.balance
@@ -195,7 +195,7 @@ with pyheroapi.connect(is_production=False) as api:  # 샌드박스
 #### [`04_etf_elw.py`](examples/04_etf_elw.py) - 💹 ETF/ELW 전문 분석
 ```python
 # ETF와 ELW의 모든 것
-with pyheroapi.connect() as api:
+with pyheroapi.connect(is_production=False) as api:  # SANDBOX MODE: set is_production=False explicitly
     # ETF 심화 분석
     kodex = api.etf("069500")
     
@@ -250,7 +250,7 @@ with pyheroapi.connect() as api:
 #### [`05_rankings_analysis.py`](examples/05_rankings_analysis.py) - 📈 시장 순위 분석
 ```python
 # 시장의 모든 순위 정보
-with pyheroapi.connect() as api:
+with pyheroapi.connect(is_production=False) as api:  # SANDBOX MODE: set is_production=False explicitly
     # 거래량 순위
     volume_leaders = api.rankings.volume_leaders(limit=20)
     print("🔥 거래량 TOP 20")
@@ -283,7 +283,7 @@ with pyheroapi.connect() as api:
 #### [`06_charts_technical.py`](examples/06_charts_technical.py) - 📊 차트 & 기술적 분석
 ```python
 # 모든 차트 데이터와 기술적 분석
-with pyheroapi.connect() as api:
+with pyheroapi.connect(is_production=False) as api:  # SANDBOX MODE: set is_production=False explicitly
     samsung = api.stock("005930")
     
     # 다양한 시간프레임 차트
@@ -394,7 +394,7 @@ if __name__ == "__main__":
 ### 🎯 **스마트 포트폴리오 관리**
 
 ```python
-with pyheroapi.connect() as api:
+with pyheroapi.connect(is_production=False) as api:  # SANDBOX MODE: set is_production=False explicitly
     account = api.account()
     
     # 전체 포트폴리오 분석
@@ -426,7 +426,7 @@ with pyheroapi.connect() as api:
 ### 📊 **고급 시장 분석**
 
 ```python
-with pyheroapi.connect() as api:
+with pyheroapi.connect(is_production=False) as api:  # SANDBOX MODE: set is_production=False explicitly
     # 시장 전체 현황
     market_summary = api.get_market_summary()
     print(f"KOSPI: {market_summary['kospi']['value']:.2f} ({market_summary['kospi']['change']:+.2f}%)")
@@ -456,7 +456,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 async def analyze_multiple_stocks(symbols):
     """여러 종목 동시 분석"""
-    with pyheroapi.connect() as api:
+    with pyheroapi.connect(is_production=False) as api:  # SANDBOX MODE: set is_production=False explicitly
         with ThreadPoolExecutor(max_workers=10) as executor:
             # 동시에 여러 종목 데이터 수집
             futures = []
@@ -503,7 +503,7 @@ secretkey = os.getenv("KIWOOM_SECRETKEY")
 client = KiwoomClient.create_with_credentials(
     appkey=appkey,
     secretkey=secretkey,
-    is_production=False,  # 처음엔 항상 샌드박스
+    is_production=False,  # SANDBOX MODE: set is_production=False explicitly
     timeout=30,
     retry_attempts=3
 )
@@ -514,7 +514,7 @@ client = KiwoomClient.create_with_credentials(
 ```python
 def safe_trading_example():
     """안전한 거래 프로세스"""
-    with pyheroapi.connect(is_production=False) as api:  # 샌드박스!
+    with pyheroapi.connect(is_production=False) as api:  # SANDBOX MODE: set is_production=False explicitly
         account = api.account()
         
         # 1. 계좌 상태 확인
@@ -608,7 +608,7 @@ source ~/.bashrc
 # 5. 첫 번째 테스트
 python -c "
 import pyheroapi
-with pyheroapi.connect() as api:
+with pyheroapi.connect(is_production=False) as api:
     print('✅ 연결 성공!')
     print(f'삼성전자: ₩{api.stock(\"005930\").current_price:,.0f}')
 "

@@ -8,6 +8,7 @@ including stock prices, order book, trades, and account updates.
 import asyncio
 import json
 import logging
+import os
 from typing import Any, Callable, Dict, List, Optional, Union
 from dataclasses import dataclass, field
 from enum import Enum
@@ -169,7 +170,7 @@ class KiwoomRealtimeClient:
     def __init__(
         self,
         access_token: str,
-        is_production: bool = False,
+        is_production: bool = True,
         auto_reconnect: bool = True,
         max_reconnect_attempts: int = 5,
         reconnect_delay: int = 5
@@ -179,7 +180,7 @@ class KiwoomRealtimeClient:
         
         Args:
             access_token: Kiwoom API access token
-            is_production: Whether to use production or sandbox environment
+            is_production: Whether to use production (default) or sandbox environment
             auto_reconnect: Whether to automatically reconnect on connection loss
             max_reconnect_attempts: Maximum number of reconnection attempts
             reconnect_delay: Delay between reconnection attempts (seconds)
@@ -631,18 +632,63 @@ class RealtimeContext:
 
 def create_realtime_client(
     access_token: str, 
-    is_production: bool = False, 
+    is_production: bool = True, 
     **kwargs
 ) -> KiwoomRealtimeClient:
     """
-    Create a real-time market data client.
+    Create a real-time client instance.
     
     Args:
         access_token: Kiwoom API access token
-        is_production: Whether to use production environment
-        **kwargs: Additional arguments for KiwoomRealtimeClient
-    
+        is_production: Whether to use production (default) or sandbox environment
+        **kwargs: Additional arguments for KiwoomRealtimeClient constructor
+        
     Returns:
         Configured KiwoomRealtimeClient instance
     """
-    return KiwoomRealtimeClient(access_token, is_production, **kwargs) 
+    return KiwoomRealtimeClient(
+        access_token=access_token,
+        is_production=is_production,
+        **kwargs
+    )
+
+
+def create_realtime_client_with_credentials(
+    appkey: str,
+    secretkey: str,
+    is_production: bool = True,
+    **kwargs
+) -> KiwoomRealtimeClient:
+    """
+    Create a real-time client instance by automatically obtaining an access token.
+    
+    Args:
+        appkey: App key from Kiwoom Securities
+        secretkey: Secret key from Kiwoom Securities
+        is_production: Whether to use production (default) or sandbox environment
+        **kwargs: Additional arguments for KiwoomRealtimeClient constructor
+        
+    Returns:
+        Configured KiwoomRealtimeClient instance
+    """
+    # For sandbox mode, check if mock environment variables are set
+    if not is_production:
+        mock_appkey = os.getenv("KIWOOM_MOCK_APPKEY")
+        mock_secretkey = os.getenv("KIWOOM_MOCK_SECRETKEY")
+        
+        if mock_appkey and mock_secretkey:
+            appkey = mock_appkey
+            secretkey = mock_secretkey
+    
+    # Import here to avoid circular imports
+    from .client import KiwoomClient
+    
+    # Get access token
+    token_response = KiwoomClient.issue_token(appkey, secretkey, is_production)
+    
+    # Create realtime client
+    return KiwoomRealtimeClient(
+        access_token=token_response.token,
+        is_production=is_production,
+        **kwargs
+    ) 

@@ -31,6 +31,7 @@ try:
         RealtimeSubscription,
         RealtimeContext,
         create_realtime_client,
+        create_realtime_client_with_credentials,
         ConditionalSearchItem,
         ConditionalSearchResult,
         ConditionalSearchRealtimeData,
@@ -43,7 +44,7 @@ except ImportError:
         def __init__(self, *args, **kwargs):
             raise ImportError("Real-time functionality requires 'websockets' package. Install with: pip install websockets")
 
-__version__ = "0.3.1"
+__version__ = "0.3.3"
 __author__ = "Kiwoom API Client"
 __email__ = "contact@example.com"
 
@@ -84,6 +85,7 @@ if _REALTIME_AVAILABLE:
         "RealtimeSubscription",
         "RealtimeContext",
         "create_realtime_client",
+        "create_realtime_client_with_credentials",
         "ConditionalSearchItem",
         "ConditionalSearchResult",
         "ConditionalSearchRealtimeData",

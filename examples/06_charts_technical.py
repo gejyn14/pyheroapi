@@ -25,7 +25,7 @@ def setup_client():
     return KiwoomClient.create_with_credentials(
         appkey=appkey,
         secretkey=secretkey,
-        is_production=False
+        is_production=False  # SANDBOX MODE: set is_production=False explicitly
     )
 
 def stock_charts_example(client):

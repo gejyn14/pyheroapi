@@ -595,7 +595,7 @@ def test_environment_setup():
             app_key="test",
             secret_key="test", 
             access_token="test",
-            is_production=False
+            is_production=False  # SANDBOX MODE: set is_production=False explicitly
         )
         assert client is not None
     except Exception as e:

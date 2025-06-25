@@ -5,7 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.3.2] - 2024-06-09
+## [0.3.3] - 2025-06-25
+
+### Changed
+- **Production Default**: Changed `is_production` parameter default from `False` (sandbox) to `True` (production) across all client constructors and methods
+  - This prevents accidental sandbox usage in production environments
+  - Sandbox mode now requires explicitly passing `is_production=False`
+  - All examples and documentation updated to reflect this change
+
+### Added
+- **Sandbox Environment Variables**: Added support for `KIWOOM_MOCK_APPKEY` and `KIWOOM_MOCK_SECRETKEY` environment variables
+  - When `is_production=False`, these variables are automatically used if set
+  - Allows separate credentials for sandbox testing without code changes
+  - Supported in all client types: main client, realtime client, and easy API wrapper
+  - New function `create_realtime_client_with_credentials()` for realtime client with automatic token generation
+
+### Security
+- **Safer Defaults**: Production mode is now the default, reducing risk of accidental sandbox usage in live trading
+- **Explicit Sandbox**: All sandbox usage now requires explicit `is_production=False` parameter
+
+### Documentation
+- **Updated Examples**: All examples now explicitly show `is_production=False` for sandbox mode
+- **Environment Setup**: Added documentation for new sandbox environment variables
+- **Testing**: Updated test suite to reflect new defaults and sandbox environment variable support
+
+## [0.3.2]
 ### Added
 - Clarified usage and distinction between ka10171 (조건검색 목록조회), ka10172 (조건검색 요청 일반), and ka10173 (조건검색 요청 실시간) in code and documentation.
 - Improved asyncio usage examples for all conditional search TRs.
@@ -14,7 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Documentation and code comments for accuracy regarding required request fields for each TR.
 
-## [0.3.1] - 2024-11-25
+## [0.3.1]
 
 ### Added
 - **Comprehensive Testing Infrastructure** for real data reception validation
@@ -38,7 +62,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Environment Setup**: Correct variable names and setup procedures
 - **Troubleshooting**: Common issues and solutions for testing
 
-## [0.3.0] - 2024-11-25
+## [0.3.0]
 
 ### Added
 - **Comprehensive Examples Suite**: Complete rewrite of all example files with 7 focused modules
@@ -67,7 +91,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **All Major Features**: ETF, ELW, rankings, charts, real-time data, trading, and market analysis
 - **Educational Value**: Progressive complexity from basic authentication to advanced trading strategies
 
-## [0.2.3] - 2024-01-15
+## [0.2.3]
 
 ### Fixed
 - **QuoteData Model**: Added missing `buy_fpr_bid` and `sel_fpr_bid` attributes to match actual API response structure

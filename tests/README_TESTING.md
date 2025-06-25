@@ -130,6 +130,7 @@ When everything is working, you should see:
 
 ### 2. Sandbox vs. Production
 - **Sandbox Mode** (`is_production=False`): Safe testing, simulated data
+  - SANDBOX MODE: set is_production=False explicitly
 - **Production Mode** (`is_production=True`): Real market data, real money implications
 
 ### 3. Data Types Tested

@@ -212,7 +212,7 @@ done
 client = KiwoomClient.create_with_credentials(
     appkey=appkey,
     secretkey=secretkey,
-    is_production=False  # ← SANDBOX MODE
+    is_production=False  # SANDBOX MODE: set is_production=False explicitly
 )
 
 # Production mode (real money!)

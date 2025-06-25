@@ -23,6 +23,7 @@ class TestKiwoomClient:
     def setup_method(self):
         """Set up test fixtures."""
         self.access_token = "test_token"
+        # SANDBOX MODE: set is_production=False explicitly
         self.client = KiwoomClient(access_token=self.access_token, is_production=False)
 
     def test_client_initialization(self):

@@ -6,6 +6,7 @@ that handles authentication, retries, and data parsing automatically.
 """
 
 import logging
+import os
 import time
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Union
@@ -918,6 +919,15 @@ class KiwoomAPI:
             ```
         """
         try:
+            # For sandbox mode, check if mock environment variables are set
+            if sandbox:
+                mock_appkey = os.getenv("KIWOOM_MOCK_APPKEY")
+                mock_secretkey = os.getenv("KIWOOM_MOCK_SECRETKEY")
+                
+                if mock_appkey and mock_secretkey:
+                    app_key = mock_appkey
+                    secret_key = mock_secretkey
+            
             client = KiwoomClient.create_with_credentials(
                 appkey=app_key,
                 secretkey=secret_key,
