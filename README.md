@@ -1,4 +1,4 @@
-# PyHero API - AI와 만들어본 키움증권 REST API Python 클라이언트 v0.3.0
+# PyHero API - AI와 만들어본 키움증권 REST API Python 클라이언트 v0.3.3
 
 [![PyPI version](https://badge.fury.io/py/pyheroapi.svg)](https://badge.fury.io/py/pyheroapi)
 [![Python versions](https://img.shields.io/pypi/pyversions/pyheroapi.svg)](https://pypi.org/project/pyheroapi/)
@@ -39,7 +39,7 @@
 
 ### 🎓 **교육적 예제 시스템**
 - 📚 **7개 포괄적 모듈**: 기초부터 고급까지 단계별 학습
-- 🛡️ **안전한 샌드박스**: 기본적으로 모의거래 환경
+- 🛡️ **안전한 샌드박스**: 모의거래 환경 제공공
 - 📖 **상세한 문서화**: 모든 기능에 대한 실용적 예제
 - 🔧 **프로덕션 준비**: 실제 거래를 위한 안전 가이드
 
