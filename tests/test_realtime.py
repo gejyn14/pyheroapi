@@ -371,6 +371,7 @@ class TestKiwoomRealtimeClient:
         client.remove_callback("0B", callback)
         client.remove_callback(RealtimeDataType.STOCK_TRADE, callback)
     
+    @pytest.mark.asyncio
     @patch('websockets.connect')
     async def test_connect_success(self, mock_connect):
         """Test successful WebSocket connection."""
@@ -388,6 +389,7 @@ class TestKiwoomRealtimeClient:
             extra_headers={"Authorization": f"Bearer test_token"}
         )
     
+    @pytest.mark.asyncio
     @patch('websockets.connect')
     async def test_connect_failure(self, mock_connect):
         """Test WebSocket connection failure."""
@@ -401,6 +403,7 @@ class TestKiwoomRealtimeClient:
         assert client.is_connected is False
         assert client.websocket is None
     
+    @pytest.mark.asyncio
     async def test_disconnect(self):
         """Test WebSocket disconnection."""
         client = KiwoomRealtimeClient("test_token")
@@ -414,6 +417,7 @@ class TestKiwoomRealtimeClient:
         assert client.websocket is None
         mock_ws.close.assert_called_once()
     
+    @pytest.mark.asyncio
     async def test_disconnect_not_connected(self):
         """Test disconnection when not connected."""
         client = KiwoomRealtimeClient("test_token")
