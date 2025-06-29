@@ -1,7 +1,7 @@
 """
 Tests for the easy API wrapper.
 """
-
+import os
 from unittest.mock import Mock, patch
 
 import pytest
@@ -23,6 +23,7 @@ class TestEasyAPI:
         assert Account is not None
         assert connect is not None
 
+    @patch.dict(os.environ, {}, clear=True)  # Clear environment to avoid real credentials
     @patch("pyheroapi.easy_api.KiwoomClient.create_with_credentials")
     def test_connect_function(self, mock_create):
         """Test the connect convenience function."""
