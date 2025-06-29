@@ -45,7 +45,7 @@ jobs:
 
       - name: Run unit tests
         run: |
-          pytest tests/ -m "unit" \
+          pytest tests/test_client.py tests/test_easy_api.py tests/test_api_coverage.py \
             --cov=pyheroapi \
             --cov-report=xml \
             --cov-report=term-missing \
@@ -53,14 +53,14 @@ jobs:
             -v
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           file: ./coverage.xml
           flags: unittests
           name: codecov-unit-${{ matrix.python-version }}
 
       - name: Upload test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: unit-test-results-${{ matrix.python-version }}
@@ -130,7 +130,7 @@ jobs:
             -v
 
       - name: Upload performance results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: performance-results
@@ -181,7 +181,7 @@ jobs:
         continue-on-error: true
 
       - name: Upload security reports
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: security-reports
@@ -206,11 +206,12 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[realtime,dev]"
+          pip install -e ".[dev]"
+          pip install websockets
 
       - name: Run real-time tests
         run: |
-          pytest tests/ -m "realtime" \
+          pytest tests/test_realtime.py tests/test_realtime_integration.py \
             --tb=short \
             -v
 
@@ -293,7 +294,8 @@ jobs:
 
       - name: Run smoke tests
         run: |
-          pytest tests/ -m "smoke" \
+          pytest tests/test_client.py::TestKiwoomClient::test_client_initialization \
+                 tests/test_easy_api.py::TestEasyAPI::test_imports \
             --tb=line \
             --maxfail=1 \
             -q
@@ -325,7 +327,7 @@ jobs:
 
     steps:
       - name: Download all artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
 
       - name: Generate test summary
         run: |
