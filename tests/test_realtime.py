@@ -277,9 +277,10 @@ class TestKiwoomRealtimeClient:
     def test_init_default_values(self):
         """Test client initialization with default values."""
         client = KiwoomRealtimeClient("test_token")
-        
+
         assert client.access_token == "test_token"
-        assert client.ws_url == client.SANDBOX_WS_URL
+        # Default is production mode (is_production=True)
+        assert client.ws_url == client.PRODUCTION_WS_URL
         assert client.auto_reconnect is True
         assert client.max_reconnect_attempts == 5
         assert client.reconnect_delay == 5

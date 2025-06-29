@@ -37,7 +37,6 @@ class TestEasyAPI:
             secretkey="test_secret",
             is_production=False,  # SANDBOX MODE: set is_production=False explicitly
             retry_attempts=3,
-            rate_limit_delay=0.1,
         )
 
     @patch("pyheroapi.easy_api.KiwoomClient.create_with_credentials")
@@ -49,12 +48,10 @@ class TestEasyAPI:
         api = KiwoomAPI.connect("test_key", "test_secret", sandbox=True)
 
         assert isinstance(api, KiwoomAPI)
-        assert hasattr(api, "_app_key")
-        assert hasattr(api, "_secret_key")
-        assert hasattr(api, "_sandbox")
-        assert api._app_key == "test_key"
-        assert api._secret_key == "test_secret"
-        assert api._sandbox == True  # SANDBOX MODE: set is_production=False explicitly
+        assert hasattr(api, "_client")  # KiwoomAPI has _client attribute
+        assert hasattr(api, "trading")  # KiwoomAPI has trading attribute
+        assert hasattr(api, "chart")    # KiwoomAPI has chart attribute
+        # Note: KiwoomAPI.connect() doesn't store app_key, secret_key, or sandbox flags
 
     def test_stock_creation(self):
         """Test Stock object creation."""

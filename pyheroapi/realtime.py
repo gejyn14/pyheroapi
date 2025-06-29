@@ -673,8 +673,8 @@ def create_realtime_client_with_credentials(
     """
     # For sandbox mode, check if mock environment variables are set
     if not is_production:
-        mock_appkey = os.getenv("KIWOOM_MOCK_APPKEY")
-        mock_secretkey = os.getenv("KIWOOM_MOCK_SECRETKEY")
+        mock_appkey = os.getenv("MOCK_KIWOOM_APPKEY")
+        mock_secretkey = os.getenv("MOCK_KIWOOM_SECRETKEY")
         
         if mock_appkey and mock_secretkey:
             appkey = mock_appkey

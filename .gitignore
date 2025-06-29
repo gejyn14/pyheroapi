@@ -62,6 +62,47 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 
+# Professional Testing Framework Artifacts
+test_reports/
+test_results/
+.test_reports/
+*.junit.xml
+*_test_report.txt
+*_test_report.html
+*_test_report.json
+test_output/
+performance_results/
+benchmark_results/
+load_test_results/
+
+# Security Testing Reports
+bandit_report.json
+safety_report.json
+security_scan_results/
+vulnerability_reports/
+
+# Code Quality Reports
+flake8_report.txt
+mypy_report.txt
+black_report.txt
+isort_report.txt
+quality_reports/
+
+# CI/CD Artifacts
+.github_actions_cache/
+ci_artifacts/
+build_artifacts/
+deploy_artifacts/
+pipeline_logs/
+
+# Performance & Monitoring
+*.prof
+*.profile
+memory_profiler_*.dat
+performance_logs/
+metrics/
+monitoring/
+
 # Translations
 *.mo
 *.pot
@@ -121,6 +162,25 @@ ENV/
 env.bak/
 venv.bak/
 
+# Environment Variables & Secrets
+.env.*
+!.env.example
+*.env
+.secrets/
+secrets.json
+api_keys.txt
+*.key
+*.pem
+*_credentials.json
+*_secret.txt
+mock_credentials.json
+
+# Kiwoom API Specific Secrets
+KIWOOM_*.txt
+MOCK_KIWOOM_*.txt
+kiwoom_credentials.*
+mock_api_keys.*
+
 # Spyder project settings
 .spyderproject
 .spyproject
@@ -147,6 +207,7 @@ dmypy.json
 
 # VS Code
 .vscode/
+*.code-workspace
 
 # macOS
 .DS_Store
@@ -176,6 +237,8 @@ $RECYCLE.BIN/
 .temp/
 temp/
 tmp/
+*.tmp
+*.temp
 
 # Local configuration files
 .env.local
@@ -194,34 +257,32 @@ api_keys.txt
 test_env/
 test_data/
 .test_cache/
+mock_data/
+fixtures/generated/
+test_fixtures/temp/
 
 # Build artifacts from our build script
 .build/
 
-# Backup files
-*.bak
-*.orig
-*.tmp
-
-# Editor swap files
-*.swp
-*.swo
-*~
-
-# Local development database files
+# Database files
 *.db
 *.sqlite
+*.sqlite3
 
-# Documentation build artifacts
+# Log files
+*.log
+logs/
+test_logs/
+debug_logs/
+application.log
+error.log
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+.docker/
+
+# Documentation builds
+site/
 docs/build/
-docs/_build/
-
-# Coverage and profiling
-.prof
-*.prof
-
-# PyPI upload configuration (should use keyring instead)
-.pypirc
-
-# Samsung stock test files (temporary testing scripts)
-samsung_stock_tests/
+.sphinx/

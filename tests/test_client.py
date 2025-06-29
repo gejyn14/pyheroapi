@@ -197,7 +197,7 @@ class TestErrorHandling:
 
     def setup_method(self):
         """Set up test fixtures."""
-        self.client = KiwoomClient(access_token="test_token")
+        self.client = KiwoomClient(access_token="test_token", is_production=False)
 
     @responses.activate
     def test_invalid_json_response(self):
