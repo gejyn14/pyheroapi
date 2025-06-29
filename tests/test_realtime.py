@@ -1069,17 +1069,20 @@ class TestReconnectionLogic:
     async def test_auto_reconnect_disabled(self, mock_connect):
         """Test with auto-reconnection disabled."""
         mock_ws = AsyncMock()
-        # Set up mock websocket properties
+        # Set up mock websocket properties to allow while loop to start
         mock_ws.closed = False
-        # Simulate connection closed exception to trigger reconnection logic
-        mock_ws.recv.side_effect = websockets.exceptions.ConnectionClosed(None, None)
+        
+        # Simulate connection closed exception immediately on recv
+        mock_ws.recv.side_effect = websockets.exceptions.ConnectionClosed(
+            rcvd=None, sent=None
+        )
         
         client = KiwoomRealtimeClient("test_token", auto_reconnect=False)
         client.is_connected = True
         client.websocket = mock_ws
         client.keep_running = True
         
-        # Mock connect to track if it's called
+        # Mock connect to track if it's called (it should NOT be called)
         connect_call_count = 0
         async def mock_failing_connect():
             nonlocal connect_call_count
@@ -1091,8 +1094,8 @@ class TestReconnectionLogic:
         await client._message_handler()
         
         # Should not attempt reconnection when auto_reconnect=False
-        assert connect_call_count == 0
-        assert client.is_connected is False
+        assert connect_call_count == 0, f"Expected 0 reconnect attempts, got {connect_call_count}"
+        assert client.is_connected is False, "Expected is_connected to be False after connection closed"
 
 
 @pytest.mark.skipif(not REALTIME_AVAILABLE, reason="websockets not available")
