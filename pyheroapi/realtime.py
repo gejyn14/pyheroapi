@@ -15,6 +15,15 @@ from enum import Enum
 
 try:
     import websockets
+    from websockets.exceptions import ConnectionClosed, WebSocketException
+    # Try to import the new API (websockets ≥12)
+    try:
+        from websockets.asyncio.client import connect as ws_connect
+        WEBSOCKETS_NEW_API = True
+    except ImportError:
+        # Fall back to legacy API (websockets <12)
+        from websockets import connect as ws_connect
+        WEBSOCKETS_NEW_API = False
 except ImportError:
     raise ImportError("websockets library is required for real-time data. Install with: pip install websockets")
 
@@ -203,7 +212,20 @@ class KiwoomRealtimeClient:
     async def connect(self) -> None:
         """Establish WebSocket connection and perform login."""
         try:
-            self.websocket = await websockets.connect(self.ws_url)
+            # Use appropriate connection method based on websockets version
+            connection_kwargs = {
+                'open_timeout': 10,  # Handshake timeout
+                'ping_interval': 20,  # Keepalive ping interval
+                'ping_timeout': 20,   # Keepalive ping timeout
+            }
+            
+            if WEBSOCKETS_NEW_API:
+                # For websockets ≥12, additional_headers is used
+                self.websocket = await ws_connect(self.ws_url, **connection_kwargs)
+            else:
+                # For websockets <12, use legacy connect
+                self.websocket = await ws_connect(self.ws_url, **connection_kwargs)
+            
             self.logger.info("WebSocket connection established, attempting login...")
             
             # Start message handling loop
@@ -218,18 +240,24 @@ class KiwoomRealtimeClient:
             await self.websocket.send(json.dumps(login_message))
             self.logger.info("LOGIN message sent to WebSocket server")
             
-            # Wait for login response
-            login_timeout = 5  # 5 second timeout for login
-            for _ in range(login_timeout * 10):  # Check every 100ms
+            # Wait for login response with proper timeout
+            login_timeout = 10  # Increased to 10 second timeout for login
+            for i in range(login_timeout * 10):  # Check every 100ms
                 if self.is_connected:
                     break
                 await asyncio.sleep(0.1)
+                if i % 50 == 0:  # Log every 5 seconds
+                    self.logger.debug(f"Waiting for login response... ({i//10}s)")
             else:
                 raise KiwoomAuthError("LOGIN timeout - no response from server")
             
             self.reconnect_count = 0
             self.logger.info("WebSocket connection and login successful")
             
+        except ConnectionClosed as e:
+            self.is_connected = False
+            self.logger.error(f"WebSocket connection closed during setup: {e}")
+            raise KiwoomAuthError(f"WebSocket connection closed: {e}")
         except Exception as e:
             self.is_connected = False
             self.logger.error(f"Failed to connect to WebSocket: {e}")
@@ -247,7 +275,7 @@ class KiwoomRealtimeClient:
     async def _message_handler(self) -> None:
         """Handle incoming WebSocket messages."""
         try:
-            while self.keep_running and self.websocket and not self.websocket.closed:
+            while self.keep_running and self.websocket:
                 try:
                     # Receive message with timeout
                     message = await asyncio.wait_for(
@@ -261,12 +289,15 @@ class KiwoomRealtimeClient:
                 except asyncio.TimeoutError:
                     self.logger.warning("WebSocket receive timeout - connection may be dead")
                     break
+                except ConnectionClosed:
+                    self.logger.info("WebSocket connection closed by server")
+                    break
                 except json.JSONDecodeError as e:
                     self.logger.error(f"Failed to parse message: {e}")
                 except Exception as e:
                     self.logger.error(f"Error processing message: {e}")
                     
-        except websockets.exceptions.ConnectionClosed as e:
+        except ConnectionClosed as e:
             self.logger.warning(f"WebSocket connection closed: {e}")
             self.is_connected = False
             
