@@ -228,9 +228,6 @@ class KiwoomRealtimeClient:
             
             self.logger.info("WebSocket connection established, attempting login...")
             
-            # Start message handling loop
-            asyncio.create_task(self._message_handler())
-            
             # Send LOGIN message as required by Kiwoom API
             login_message = {
                 'trnm': 'LOGIN',
@@ -240,24 +237,38 @@ class KiwoomRealtimeClient:
             await self.websocket.send(json.dumps(login_message))
             self.logger.info("LOGIN message sent to WebSocket server")
             
-            # Wait for login response with proper timeout
-            login_timeout = 10  # Increased to 10 second timeout for login
-            for i in range(login_timeout * 10):  # Check every 100ms
-                if self.is_connected:
-                    break
-                await asyncio.sleep(0.1)
-                if i % 50 == 0:  # Log every 5 seconds
-                    self.logger.debug(f"Waiting for login response... ({i//10}s)")
-            else:
-                raise KiwoomAuthError("LOGIN timeout - no response from server")
+            # Read LOGIN-ACK response directly (no race conditions)
+            raw = await asyncio.wait_for(self.websocket.recv(), timeout=10)
+            data = json.loads(raw)
             
+            # Validate LOGIN response
+            if data.get("trnm") != "LOGIN":
+                raise KiwoomAuthError(f"Unexpected first frame: {data.get('trnm')}")
+            
+            if data.get("return_code") != 0:
+                raise KiwoomAuthError(f"LOGIN failed: {data.get('return_msg', '')}")
+            
+            # LOGIN successful - set connected state
+            self.is_connected = True
             self.reconnect_count = 0
+            self.logger.info("LOGIN successful")
+            
+            # Only now start the background message handler
+            self._handler_task = asyncio.create_task(self._message_handler())
             self.logger.info("WebSocket connection and login successful")
             
         except ConnectionClosed as e:
             self.is_connected = False
             self.logger.error(f"WebSocket connection closed during setup: {e}")
             raise KiwoomAuthError(f"WebSocket connection closed: {e}")
+        except asyncio.TimeoutError:
+            self.is_connected = False
+            self.logger.error("LOGIN timeout - no response from server")
+            raise KiwoomAuthError("LOGIN timeout - no response from server")
+        except json.JSONDecodeError as e:
+            self.is_connected = False
+            self.logger.error(f"Invalid JSON in LOGIN response: {e}")
+            raise KiwoomAuthError(f"Invalid LOGIN response format: {e}")
         except Exception as e:
             self.is_connected = False
             self.logger.error(f"Failed to connect to WebSocket: {e}")
@@ -267,6 +278,15 @@ class KiwoomRealtimeClient:
         """Close WebSocket connection."""
         self.keep_running = False
         self.is_connected = False
+        
+        # Cancel the message handler task if it exists
+        if hasattr(self, '_handler_task') and not self._handler_task.done():
+            self._handler_task.cancel()
+            try:
+                await self._handler_task
+            except asyncio.CancelledError:
+                pass
+            
         if self.websocket:
             await self.websocket.close()
             self.websocket = None
@@ -329,20 +349,8 @@ class KiwoomRealtimeClient:
         """Process incoming message and trigger callbacks."""
         trnm = data.get("trnm")
         
-        if trnm == "LOGIN":
-            # Handle LOGIN response
-            return_code = data.get("return_code", 1)
-            return_msg = data.get("return_msg", "")
-            
-            if return_code == 0:
-                self.is_connected = True
-                self.logger.info("LOGIN successful")
-            else:
-                self.is_connected = False
-                self.logger.error(f"LOGIN failed: {return_msg}")
-                raise KiwoomAuthError(f"LOGIN failed: {return_msg}")
-                
-        elif trnm == "PING":
+        # Note: LOGIN is now handled directly in connect() method
+        if trnm == "PING":
             # Handle PING - echo back the same message (keep-alive)
             await self.websocket.send(json.dumps(data))
             self.logger.debug("PING response sent")
