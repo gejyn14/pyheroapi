@@ -592,8 +592,6 @@ def test_environment_setup():
     # Test basic client creation
     try:
         client = create_realtime_client(
-            app_key="test",
-            secret_key="test", 
             access_token="test",
             is_production=False  # SANDBOX MODE: set is_production=False explicitly
         )

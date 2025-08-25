@@ -140,8 +140,8 @@ class KiwoomClient:
         """
         # For sandbox mode, check if mock environment variables are set
         if not is_production:
-            mock_appkey = os.getenv("KIWOOM_MOCK_APPKEY")
-            mock_secretkey = os.getenv("KIWOOM_MOCK_SECRETKEY")
+            mock_appkey = os.getenv("MOCK_KIWOOM_APPKEY")
+            mock_secretkey = os.getenv("MOCK_KIWOOM_SECRETKEY")
             
             if mock_appkey and mock_secretkey:
                 appkey = mock_appkey
@@ -169,8 +169,8 @@ class KiwoomClient:
         """
         # For sandbox mode, check if mock environment variables are set
         if not is_production:
-            mock_appkey = os.getenv("KIWOOM_MOCK_APPKEY")
-            mock_secretkey = os.getenv("KIWOOM_MOCK_SECRETKEY")
+            mock_appkey = os.getenv("MOCK_KIWOOM_APPKEY")
+            mock_secretkey = os.getenv("MOCK_KIWOOM_SECRETKEY")
             
             if mock_appkey and mock_secretkey:
                 appkey = mock_appkey
@@ -223,8 +223,8 @@ class KiwoomClient:
         """
         # For sandbox mode, check if mock environment variables are set
         if not is_production:
-            mock_appkey = os.getenv("KIWOOM_MOCK_APPKEY")
-            mock_secretkey = os.getenv("KIWOOM_MOCK_SECRETKEY")
+            mock_appkey = os.getenv("MOCK_KIWOOM_APPKEY")
+            mock_secretkey = os.getenv("MOCK_KIWOOM_SECRETKEY")
             
             if mock_appkey and mock_secretkey:
                 appkey = mock_appkey
@@ -363,7 +363,7 @@ class KiwoomClient:
 
                 return response_data
 
-            except (requests.RequestException, KiwoomRateLimitError) as e:
+            except (requests.RequestException, KiwoomRateLimitError, KiwoomServerError) as e:
                 if attempt == self.retry_attempts - 1:
                     raise KiwoomAPIError(
                         f"Request failed after {self.retry_attempts} attempts: {e}"
